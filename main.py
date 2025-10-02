@@ -496,7 +496,17 @@ class life:
             self.sex(random.choice(WORLD.lifes))
             LOGFILE.flush()
         if not self.mind.memory.data:
-            self.listen()
+            result: list[str]=self.listen()
+            for i in result:
+                if i in self.mind.concepts:
+                    self.think(self.mind.concepts[i])
+                    break
+            else:
+                choosen: str=random.choice(result)
+                self.think({choosen:event(choosen,WORLD.time(),
+                            self.position,self.mind.feeling)
+                        })
+                # later, I shell change it to sorting it of the simularity from concepts, and find out the most positive one
             return
         positivity: float=self.personality["positivity"].value
         negativity: float=self.personality["negativity"].value

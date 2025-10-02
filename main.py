@@ -593,7 +593,7 @@ class life:
             self.dead_reason="heat"
         elif self.body_temp<30:
             self.is_alive=False
-            self.dead_reason="Hypothermia"
+            self.dead_reason="hypothermia"
     def sex(self,another: "life")-> Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore

@@ -237,7 +237,7 @@ class mind:
         self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,(random.random() or .001)) for i in FEELINGS}
     def think(self,thought: dict[str,event])-> tuple[bool,bool]:
         """Think if this should be in memory"""
-        print(thought,file=LOGFILE)
+        print(thought)
         if not thought:
             return (False,False)
         want: bool=False # It stats if we should operate on this event.
@@ -483,18 +483,21 @@ class life:
         if self.in_sleep and self.energy>=80:
             self.in_sleep=False
             print(self.name,f"woke up just at time {WORLD.time()}!")
+        if self.touch_food():
+            print(self.name,"found food!",file=LOGFILE)
+            LOGFILE.flush()
+            self.nutrition+=20
+            self.water_content+=1
+            self.store_fat()
+            self.think({"eat food":event("eat food",WORLD.time(),self.position,
+                        self.change_feeling(.5))
+                        })
+        if self.storage_fat>0 and self.energy>90:
+            self.sex(random.choice(WORLD.lifes))
             LOGFILE.flush()
         if not self.mind.memory.data:
             self.listen()
             return
-        if self.touch_food():
-            print(self.name,"found food!",file=LOGFILE)
-            LOGFILE.flush()
-            self.store_fat()
-            self.nutrition+=20
-            self.water_content+=1
-        if self.storage_fat>0 and self.energy>90:
-            self.sex(random.choice(WORLD.lifes))
         positivity: float=self.personality["positivity"].value
         negativity: float=self.personality["negativity"].value
         calmness: float=self.personality["calmness"].value
@@ -538,6 +541,12 @@ class life:
                 m: str=most_frequent(self.listen(),random_string())
                 self.mind.concepts.update({m:{m:e}})
                 self.communicate([m])
+        if self.water_content<60:
+            print("Hay!")
+            self.think({"be thirsty":event("be thirsty",WORLD.time(),self.position,
+                        self.change_feeling(-.4)
+                        )}
+                    )
         # heat perform system
         dx: float
         dy: float
@@ -574,7 +583,7 @@ class life:
         elif self.body_temp<30:
             self.is_alive=False
             self.dead_reason="Hypothermia"
-        self.listen()
+        print(self.name,"Water Content:",self.water_content,"Temp:",self.body_temp)
     def sex(self,another: "life")-> Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore
@@ -629,7 +638,8 @@ class life:
         """store fat for energy"""
         if self.nutrition>100:
             self.storage_fat+=self.nutrition-100
-            self.extra_weight+=self.nutrition-100*.9
+            self.water_content+=(self.nutrition-100)*.5
+            self.extra_weight+=(self.nutrition-100)*.8
             # the density of fat is .9g/ml
             self.nutrition-=self.nutrition-100
             self.think({"store fat":event(
@@ -707,7 +717,7 @@ class environment:
                                         position(x+random.uniform(0,BIOME_SIZE),y+random.uniform(0,BIOME_SIZE),"food")
                                         )
                         )
-        """
+        # """
         root: tk.Tk=tk.Tk()
         root.title("Color Grid Map")
         frame: tk.Frame=tk.Frame(root)

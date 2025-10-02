@@ -4,12 +4,12 @@
 夏娃 found food!
 夏娃: I don't want to store fat
 夏娃: I want to eat food
-亞當 found food!
-亞當 found food!
-亞當 found food!
-亞當 found food!
-亞當 is dead due to hypothermia, in biome snowland!
+夏娃 found food!
+夏娃 found food!
+亞當 is in sleep at time 9!
+亞當 is dead due to starving, in biome basin!
 亞當 died at age 0.00 years old.
-夏娃 is dead due to starving, in biome rocky!
+夏娃 is in sleep at time 10!
+夏娃 is dead due to starving, in biome snowland!
 夏娃 died at age 0.00 years old.
-All lifes are dead in 16 ticks!
+All lifes are dead in 12 ticks!

@@ -353,7 +353,7 @@ class life:
         self.body_temp: float=36.0 # in celsius
         self.fat_index: float=10
         self.dead_reason: str=""
-        self.water_content: float=75 # in percentage
+        self.water_content: float=85 # in percentage
         self.gene: dict[str,float] # This forms the reaction
         # of certain events. Omit teaching
     def think(self,thought: dict[str,event])->tuple[bool,bool]:
@@ -408,7 +408,6 @@ class life:
         for i in message:
             voices[self.position]=i
             print(self.name+":",i,file=LOGFILE)
-            LOGFILE.flush()
     def percieve_event(self,e: event)->None:
         """see an event and act la"""
         if self.think({e.name:e})[1]:
@@ -422,7 +421,6 @@ class life:
     def _del__(self):
         """run when deleted(dead)"""
         print(self.name,f"is dead due to {self.dead_reason}, in biome {self.get_certain_biome().name}!",file=LOGFILE)
-        LOGFILE.flush()
     def get_certain_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position.y/BIOME_SIZE)][int(self.position.x/BIOME_SIZE)]
@@ -484,23 +482,33 @@ class life:
             self.is_alive=False
             self.dead_reason="dehydration"
             return
-        if self.energy<=0 or self.nutrition<=0:
+        if self.energy<=0:
+            if self.nutrition<=0:
+                self.hydrolysis(min(self.storage_fat,100))
+            else:
+                self.nutrition2energy()
             self.is_alive=False
             self.dead_reason="starving"
             return
         if not self.in_sleep and self.energy<20:
-            self.in_sleep=True
-            print(self.name,f"is in sleep at time {WORLD.time()}!",file=LOGFILE)
-            LOGFILE.flush()
+            if self.storage_fat<80-self.nutrition:
+                self.in_sleep=random.random()<.1
+                print(self.name,f"is slept in starving!",file=LOGFILE)
+            else:
+                self.in_sleep=True
+            if self.in_sleep:
+                print(self.name,f"is in sleep at time {WORLD.time()}!",file=LOGFILE)
+        if self.in_sleep:
             self.sleep()
             self.dream()
+            if self.energy>=80:
+                self.in_sleep=False
+                print(self.name,f"woke up just at time {WORLD.time()}!",file=LOGFILE)
+            else:
+                self.hydrolysis(80-self.nutrition)
             return
-        if self.in_sleep and self.energy>=80:
-            self.in_sleep=False
-            print(self.name,f"woke up just at time {WORLD.time()}!",file=LOGFILE)
         if self.touch_food():
             print(self.name,"found food!",file=LOGFILE)
-            LOGFILE.flush()
             self.nutrition+=20
             self.water_content+=3
             self.store_fat()
@@ -510,7 +518,7 @@ class life:
         """
         if self.storage_fat>0 and self.energy>90:
             self.sex(chose(WORLD.lifes,self))
-            LOGFILE.flush()# """
+            # """
         if not self.mind.memory.data:
             result: list[str]=self.listen()
             if not result:
@@ -543,7 +551,6 @@ class life:
             want,noticed=self.think(i)
             if noticed:
                 print(self.name+":","I"+" don't"*int(not want)+" want to",tuple(i.keys())[0],file=LOGFILE)
-                LOGFILE.flush()
         # defines the var type here,yet var1: type,var2: type is not supported
         name: str
         e: event
@@ -649,7 +656,6 @@ class life:
             self.change_feeling(.6,{"tiring":.4})
         )})
         print(self.name,"and",another.name,"made a baby:",baby.name,file=LOGFILE)
-        LOGFILE.flush()
         return baby
     def sleep(self):
         """sleep to recover energy, but lose nutrition"""
@@ -792,7 +798,6 @@ class environment:
             i.update()
             if i.is_dead():
                 print(i.name,f"died at age {i.age:.2f} years old.",file=LOGFILE)
-                LOGFILE.flush()
                 del self.lifes[time-deled]
                 deled+=1
         voices.clear()
@@ -823,9 +828,14 @@ t: float=time.monotonic()
 while 1:
     if not WORLD.lifes:
         print(f"All lifes are dead in {WORLD.tick} ticks!",file=LOGFILE)
-        LOGFILE.flush()
         break
+    if WORLD.tick%5000==0 and WORLD.tick>0:
+        # LOGFILE.close()
+        LOGFILE=open("log.txt","a+",encoding="utf-8") # type: ignore
+        print("5000 tick passed!")
     WORLD.mainloop()
     time.sleep(interval-((time.monotonic()-t)%interval))
+else:
+    print("???")
 LOGFILE.close()
 print("Closed!")

@@ -237,6 +237,7 @@ class mind:
         self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,(random.random() or .001)) for i in FEELINGS}
     def think(self,thought: dict[str,event])-> tuple[bool,bool]:
         """Think if this should be in memory"""
+        print(thought,file=LOGFILE)
         if not thought:
             return (False,False)
         want: bool=False # It stats if we should operate on this event.
@@ -513,7 +514,6 @@ class life:
             want: bool
             noticed: bool
             want,noticed=self.think(i)
-            print(want,noticed)
             if noticed:
                 print(self.name+":","I"+" don't"*int(not want)+" want to",tuple(i.keys())[0],file=LOGFILE)
                 LOGFILE.flush()

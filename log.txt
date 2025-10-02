@@ -1,0 +1,11 @@
+亞當 found food!
+亞當: I don't want to store fat
+亞當: I want to eat food
+夏娃 found food!
+夏娃: I don't want to store fat
+夏娃: I want to eat food
+亞當 is dead due to starving, in biome rocky!
+亞當 died at age 0.00 years old.
+夏娃 is dead due to starving, in biome rocky!
+夏娃 died at age 0.00 years old.
+All lifes are dead in 20 ticks!

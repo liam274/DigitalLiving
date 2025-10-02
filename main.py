@@ -88,6 +88,11 @@ def age2weight(age: float)-> float:
     else:
         v,s=16,20
     return 80/(1+math.exp((v-age)/s))
+def chose(l: list[Any],t: Any)->Any:
+    r: Any=random.choice(l)
+    while t is r:
+        r=random.choice(l)
+    return r
 # classes
 
 ## data
@@ -234,10 +239,9 @@ class mind:
         # This is using for patience of how frequent should a emotion explodes.
         self.history_feeling_tick: dict[str,int]={i:1 for i in FEELINGS}
         self.concepts: dict[str,dict[str,event]]={} # concepts
-        self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,(random.random() or .001)) for i in FEELINGS}
+        self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,0) for i in FEELINGS}
     def think(self,thought: dict[str,event])-> tuple[bool,bool]:
         """Think if this should be in memory"""
-        print(thought)
         if not thought:
             return (False,False)
         want: bool=False # It stats if we should operate on this event.
@@ -269,6 +273,9 @@ class mind:
                     # flow the memory,the memory index is all about how good your memory is.
                     details,_event.time,_event.venue,_event.feeling,memory_index
                     )
+                temp: dict[str,event]=self.concepts.get(details,{})
+                temp.update({details:_event})
+                self.concepts[details]=temp
                 noticed=True
                 want=_sum>0
                 if want:
@@ -404,7 +411,7 @@ class life:
             LOGFILE.flush()
     def percieve_event(self,e: event)-> None:
         """see an event and act la"""
-        if self.mind.think({e.name:e})[1]:
+        if self.think({e.name:e})[1]:
             self.mind.remember_e(e)
     def is_dead(self)->bool:
         """check is dead"""
@@ -452,12 +459,11 @@ class life:
             return (ox-self.position.x,oy-self.position.y)
         return pos
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
-        """+ for positive feeling, - for negative feeling"""
-        result: dict[str,emotion_stat]={}
-        for i,_ in {i:emotion_stat(i,emo.value+n*(-1)**(int(i in POSITIVE_FEELINGS)+1))for i,emo in self.mind.feeling.items()}.items():
+        """+ + for positive feeling, - for negative feeling"""
+        result: dict[str,emotion_stat]={i:emotion_stat(i,emo.value+n*(-1)**(int(i in POSITIVE_FEELINGS)+1))for i,emo in self.mind.feeling.items()}
+        for i,_ in result.copy().items():
             if i in specific:
                 result[i].value+=specific[i]
-        self.mind.feeling=result
         return result
     def update(self):
         """update the mainloop"""
@@ -492,9 +498,10 @@ class life:
             self.think({"eat food":event("eat food",WORLD.time(),self.position,
                         self.change_feeling(.5))
                         })
+        """
         if self.storage_fat>0 and self.energy>90:
-            self.sex(random.choice(WORLD.lifes))
-            LOGFILE.flush()
+            self.sex(chose(WORLD.lifes,self))
+            LOGFILE.flush()# """
         if not self.mind.memory.data:
             result: list[str]=self.listen()
             for i in result:
@@ -513,14 +520,9 @@ class life:
         calmness: float=self.personality["calmness"].value
         if self.is_starving():
             self.mind.feeling["stressed"].value+=0.5*negativity/calmness
-            hopeful: emotion_stat=emotion_stat("hopeful",self.mind.feeling["hopeful"].value+.5/calmness)
-            self.mind.think({
+            self.think({
                 "be starving":event("be starving",WORLD.time(),self.position,self.mind.feeling),
-                "find food":event("find food",WORLD.time(),self.position,{
-                    name: (stat if name!="hopeful"else
-                           hopeful)
-                           for name,stat in self.mind.feeling.items()
-                    })
+                "find food":event("find food",WORLD.time(),self.position,self.change_feeling(0,{"hopeful":.5/calmness}))
                 }
             )
         for i in tuple(self.mind.thoughts):
@@ -552,7 +554,6 @@ class life:
                 self.mind.concepts.update({m:{m:e}})
                 self.communicate([m])
         if self.water_content<60:
-            print("Hay!")
             self.think({"be thirsty":event("be thirsty",WORLD.time(),self.position,
                         self.change_feeling(-.4)
                         )}
@@ -593,7 +594,6 @@ class life:
         elif self.body_temp<30:
             self.is_alive=False
             self.dead_reason="Hypothermia"
-        print(self.name,"Water Content:",self.water_content,"Temp:",self.body_temp)
     def sex(self,another: "life")-> Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore

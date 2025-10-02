@@ -58,7 +58,7 @@ def most_frequent(l: list[Any],default: Any)->Any:
 def random_string()->str:
     """return a random string"""
     return "".join(random.choice(PRINTABLE) for _ in range(random.randint(1,20)))
-def shuffle(l: list[Any],repeat_weight: dict[Any,float]={}) -> list[Any]:
+def shuffle(l: list[Any],repeat_weight: dict[Any,float]={}) ->list[Any]:
     """Shuffle the list,allowing some elements to repeat based on weight."""
     r: list[Any]=[]
     counter: Counter[Any]=Counter(l)
@@ -79,7 +79,7 @@ def shuffle(l: list[Any],repeat_weight: dict[Any,float]={}) -> list[Any]:
             del counter[choice]
         last=choice
     return r
-def age2weight(age: float)-> float:
+def age2weight(age: float)->float:
     """convert age to weight"""
     v: float=0
     s: float=0
@@ -106,10 +106,10 @@ class queue(Generic[T]):
     def enqueue(self,item: T):
         """Add item in the deque"""
         self.data.append(item)
-    def dequeue(self) -> Optional[T]:
+    def dequeue(self) ->Optional[T]:
         """Remove the first given item"""
         return self.data.popleft() if self.data else None
-    def top(self) -> Optional[T]:
+    def top(self) ->Optional[T]:
         """Get the earliest"""
         return self.data[0] if self.data else None
     def is_empty(self):
@@ -126,7 +126,7 @@ class position:
     x: float
     y: float
     name: str
-    def distance(self,other: "position") -> float:
+    def distance(self,other: "position") ->float:
         """return the distance"""
         return float(np.linalg.norm(np.array([self.x,self.y])-np.array([other.x,other.y])))
     def __str__(self):
@@ -206,7 +206,7 @@ class memory:
                  for name,i in self.data[name].feeling.items()
                 }
         return {i:emotion_stat(i,(random.random() or .001)) for i in FEELINGS} # fake some memory
-    def forget(self,name: str)-> Optional[event]:
+    def forget(self,name: str)->Optional[event]:
         """Forget the curtain event"""
         return self.data.pop(name,None) # forget the first event remembered
     def remember_e(self,e: event):
@@ -240,7 +240,7 @@ class mind:
         self.history_feeling_tick: dict[str,int]={i:1 for i in FEELINGS}
         self.concepts: dict[str,dict[str,event]]={} # concepts
         self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,0) for i in FEELINGS}
-    def think(self,thought: dict[str,event])-> tuple[bool,bool]:
+    def think(self,thought: dict[str,event])->tuple[bool,bool]:
         """Think if this should be in memory"""
         if not thought:
             return (False,False)
@@ -289,7 +289,7 @@ class mind:
     def feel(self,name: str)->dict[str,emotion_stat]:
         """Feel a certain event"""
         return self.memory.data[name].feeling
-    def forget(self,name: str)-> Optional[event]:
+    def forget(self,name: str)->Optional[event]:
         """simply forget it"""
         return self.memory.forget(name) # just simply forget it
     def recall(self,name: str)->dict[str,emotion_stat]:
@@ -356,16 +356,16 @@ class life:
         self.water_content: float=75 # in percentage
         self.gene: dict[str,float] # This forms the reaction
         # of certain events. Omit teaching
-    def think(self,thought: dict[str,event])-> tuple[bool,bool]:
+    def think(self,thought: dict[str,event])->tuple[bool,bool]:
         """Think about something"""
         return self.mind.think(thought)
     def feel(self,name: str)->dict[str,emotion_stat]:
         """Feel about event"""
         return self.mind.feel(name)
-    def recall(self,name: str)-> dict[str,emotion_stat]:
+    def recall(self,name: str)->dict[str,emotion_stat]:
         """recall the memory"""
         return self.mind.recall(name)
-    def forget(self,name: str)-> Optional[event]:
+    def forget(self,name: str)->Optional[event]:
         """forget the event"""
         return self.mind.forget(name)
     def friend(self,obj: mind):
@@ -383,7 +383,7 @@ class life:
         self.tick+=tick
         self.age+=tick/31536000
         self.weight=age2weight(self.age)
-    def listen(self)-> list[str]:
+    def listen(self)->list[str]:
         """listen to the voices"""
         global voices
         result: list[str]=[]
@@ -409,7 +409,7 @@ class life:
             voices[self.position]=i
             print(self.name+":",i,file=LOGFILE)
             LOGFILE.flush()
-    def percieve_event(self,e: event)-> None:
+    def percieve_event(self,e: event)->None:
         """see an event and act la"""
         if self.think({e.name:e})[1]:
             self.mind.remember_e(e)
@@ -423,7 +423,7 @@ class life:
         """run when deleted(dead)"""
         print(self.name,f"is dead due to {self.dead_reason}, in biome {self.get_certain_biome().name}!",file=LOGFILE)
         LOGFILE.flush()
-    def get_certain_biome(self)-> biome:
+    def get_certain_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position.y/BIOME_SIZE)][int(self.position.x/BIOME_SIZE)]
     def nutrition2energy(self):
@@ -454,7 +454,7 @@ class life:
         self.position.x=max(0,min(WORLD.width-1,self.position.x+dx))
         self.position.y=max(0,min(WORLD.height-1,self.position.y+dy))
         self.energy-=math.sqrt((ox-self.position.x)**2+(oy-self.position.y)**2)/10
-        def pos()-> tuple[float,float]:
+        def pos()->tuple[float,float]:
             return (ox-self.position.x,oy-self.position.y)
         return pos
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
@@ -589,15 +589,21 @@ class life:
         if self.get_certain_biome().temperature>38:
             if random.random()<.01:
                 # hot adapt
-                self.fat_index*=.95
-        if self.body_temp>38 and (self.fat_index>15 or dt>1):
-            self.sweat()
-        if self.body_temp<30:
-            self.nutrition2energy()
-            self.shiver()
+                self.hydrolysis(.05)
+        elif self.get_certain_biome().temperature<25:
+            if random.random()<.01:
+                # cold adapt
+                self.store_fat(90)
+                self.nutrition2energy()
+        if self.body_temp>38:
+            if self.fat_index>15 or dt>1:
+                self.sweat()
+        elif self.body_temp<30:
             self.think({"be cold":event("be cold",WORLD.time(),
                         self.position,self.change_feeling(-.2)
                     )})
+            self.nutrition2energy()
+            self.shiver()
         elif 34<self.body_temp<37:
             self.think({"be warm":event("be warm",WORLD.time(),
                         self.position,self.change_feeling(.2)
@@ -608,7 +614,7 @@ class life:
         elif self.body_temp<30:
             self.is_alive=False
             self.dead_reason="hypothermia"
-    def sex(self,another: "life")-> Optional["life"]:
+    def sex(self,another: "life")->Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore
             return None
@@ -649,28 +655,38 @@ class life:
         """sleep to recover energy, but lose nutrition"""
         self.energy=min(100,self.energy+.005)
         self.nutrition=max(0,self.nutrition-.002)
-    def is_starving(self)-> bool:
+    def is_starving(self)->bool:
         """check if starving"""
         return self.nutrition<20
-    def touch_food(self)-> bool:
+    def touch_food(self)->bool:
         """check if touching food"""
         for i in WORLD.obj:
             if self.position.distance(i.pos)<5 and "food"==i.name:
                 return True
         return False
-    def store_fat(self):
+    def store_fat(self,limit: float=100):
         """store fat for energy"""
-        if self.nutrition>100:
-            self.storage_fat+=self.nutrition-100
-            self.water_content+=(self.nutrition-100)*.5
-            self.extra_weight+=(self.nutrition-100)*.8
+        if self.nutrition>limit:
+            self.storage_fat+=self.nutrition-limit
+            # dehydration condensation
+            self.water_content+=(self.nutrition-limit)*.5
+            self.extra_weight+=(self.nutrition-limit)*.9
             # the density of fat is .9g/ml
-            self.nutrition-=self.nutrition-100
+            self.nutrition-=self.nutrition-limit
             self.think({"store fat":event(
                 "store fat",WORLD.time(),self.position,
                 self.change_feeling(.5)
             )})
             self.fat_index=self.storage_fat/self.get_weight()
+    def hydrolysis(self,count: float)->bool:
+        """do hydrolysis to fat"""
+        if self.storage_fat<=0:
+            return False
+        self.nutrition+=self.storage_fat*count
+        self.water_content-=self.storage_fat*count*.8
+        self.fat_index*=1-count
+        self.storage_fat*=1-count
+        return True
     def find_food(self):
         """find food to eat"""
         self.move()

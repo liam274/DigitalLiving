@@ -513,6 +513,7 @@ class life:
             want: bool
             noticed: bool
             want,noticed=self.think(i)
+            print(want,noticed)
             if noticed:
                 print(self.name+":","I"+" don't"*int(not want)+" want to",tuple(i.keys())[0],file=LOGFILE)
                 LOGFILE.flush()

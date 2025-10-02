@@ -428,11 +428,10 @@ class life:
         return WORLD.map[int(self.position.y/BIOME_SIZE)][int(self.position.x/BIOME_SIZE)]
     def nutrition2energy(self):
         """change nutrition to energy"""
-        if self.energy<=40:
-            if self.nutrition<0:
-                if self.storage_fat>0:
-                    self.nutrition=min(10,self.storage_fat)
-                    self.storage_fat-=min(10,self.storage_fat)
+        if self.energy<=40 and self.nutrition<0:
+            if self.storage_fat>0 and self.nutrition<50:
+                self.nutrition+=min(10,self.storage_fat)
+                self.storage_fat-=min(10,self.storage_fat)
             self.energy+=min(10,self.nutrition)
             self.nutrition-=min(10,self.nutrition)
     def shiver(self):
@@ -460,40 +459,50 @@ class life:
         return pos
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
         """+ + for positive feeling, - for negative feeling"""
-        result: dict[str,emotion_stat]={i:emotion_stat(i,emo.value+n*(-1)**(int(i in POSITIVE_FEELINGS)+1))for i,emo in self.mind.feeling.items()}
+        result: dict[str,emotion_stat]={
+            i:emotion_stat(i,emo.value+(n*(-1)**(int(i in POSITIVE_FEELINGS)+1))/self.personality["calmness"].value)
+            for i,emo in self.mind.feeling.items()
+        }
         for i,_ in result.copy().items():
             if i in specific:
                 result[i].value+=specific[i]
         return result
+    def dream(self):
+        pass
     def update(self):
         """update the mainloop"""
+        # grow
         self.mind.grow(1)
         self.grow(1)
+        # use up
         self.nutrition-=.01
         self.energy-=.01
         self.water_content-=.01
+        self.nutrition2energy()
+        # death operations
         if self.water_content<25:
             self.is_alive=False
             self.dead_reason="dehydration"
-        self.nutrition2energy()
+            return
         if self.energy<=0 or self.nutrition<=0:
             self.is_alive=False
             self.dead_reason="starving"
             return
         if not self.in_sleep and self.energy<20:
             self.in_sleep=True
-            print(self.name,f"is in sleep at time {WORLD.time()}!")
+            print(self.name,f"is in sleep at time {WORLD.time()}!",file=LOGFILE)
             LOGFILE.flush()
             self.sleep()
+            self.dream()
             return
         if self.in_sleep and self.energy>=80:
             self.in_sleep=False
-            print(self.name,f"woke up just at time {WORLD.time()}!")
+            print(self.name,f"woke up just at time {WORLD.time()}!",file=LOGFILE)
         if self.touch_food():
             print(self.name,"found food!",file=LOGFILE)
             LOGFILE.flush()
             self.nutrition+=20
-            self.water_content+=1
+            self.water_content+=3
             self.store_fat()
             self.think({"eat food":event("eat food",WORLD.time(),self.position,
                         self.change_feeling(.5))
@@ -504,6 +513,9 @@ class life:
             LOGFILE.flush()# """
         if not self.mind.memory.data:
             result: list[str]=self.listen()
+            if not result:
+                self.change_feeling(-.7/self.personality["positivity"].value)
+                return
             for i in result:
                 if i in self.mind.concepts:
                     self.think(self.mind.concepts[i])
@@ -519,7 +531,7 @@ class life:
         negativity: float=self.personality["negativity"].value
         calmness: float=self.personality["calmness"].value
         if self.is_starving():
-            self.mind.feeling["stressed"].value+=0.5*negativity/calmness
+            self.mind.feeling["stressed"].value+=negativity/(calmness*2)
             self.think({
                 "be starving":event("be starving",WORLD.time(),self.position,self.mind.feeling),
                 "find food":event("find food",WORLD.time(),self.position,self.change_feeling(0,{"hopeful":.5/calmness}))
@@ -536,6 +548,8 @@ class life:
         name: str
         e: event
         name,e=next(reversed(self.mind.memory.data.items()))
+        const1: float=1/positivity
+        const2: float=-1/negativity
         if self.think({name:e})[1]:
             for i in tuple(self.mind.thoughts.data[0].values())[0].what_to_do:
                 self.__dict__[i]()
@@ -544,10 +558,10 @@ class life:
                 self.mind.history_feeling_tick[_name]+=1
                 value: float=emotion.value
                 if t<POSITIVE_RANGE:
-                    if value*positivity>=1:
+                    if value>=const1:
                         self.mind.history_feeling_tick[_name]=0
                     continue
-                if value*negativity<=-1:
+                if value<=const2:
                     self.mind.history_feeling_tick[_name]=0
             if name not in self.mind.concepts: # make concepts
                 m: str=most_frequent(self.listen(),random_string())
@@ -567,10 +581,10 @@ class life:
             (self.get_certain_biome().temperature-self.body_temp)/((self.fat_index or 1)*20)
         self.body_temp+=dt
         if self.body_temp>38:
-            cooling_rate: float=.5+(1./((self.fat_index or 1)+.5))
-            self.body_temp-=min((self.body_temp-36)*0.1, cooling_rate)
+            cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
+            self.body_temp-=min((self.body_temp-36)*.1, cooling_rate)
             self.think({"be hot":event("be hot",WORLD.time(),
-                        self.position,self.change_feeling(-.2))
+                        self.position,self.change_feeling(-.4))
                         })
         if self.get_certain_biome().temperature>38:
             if random.random()<.01:

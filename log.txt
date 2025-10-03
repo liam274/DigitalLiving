@@ -1,9 +1,9 @@
 夏娃 found food!
 夏娃: I don't want to store fat
 夏娃: I want to eat food
-夏娃 is in sleep at tick 9!
-[12] 夏娃 is dead due to dehydration, in biome highland!
+夏娃 is in sleep at tick 11!
+[14] 夏娃 is dead due to dehydration, in biome highland!
 夏娃 died at age 0.00 years old.
-[6000] 亞當 is dead due to dehydration, in biome grassland!
+[6000] 亞當 is dead due to dehydration, in biome snow-mountain!
 亞當 died at age 0.00 years old.
 All lifes are dead in 6000 ticks!

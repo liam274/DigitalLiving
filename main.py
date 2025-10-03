@@ -127,7 +127,7 @@ class position:
     y: float
     name: str
     def distance(self,other: "position") ->float:
-        """return the distance"""
+        """return the Euclidean distance"""
         return float(np.linalg.norm(np.array([self.x,self.y])-np.array([other.x,other.y])))
     def __str__(self):
         """stringify"""

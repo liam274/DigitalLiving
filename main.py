@@ -355,6 +355,7 @@ class life:
         self.dead_reason: str=""
         self.water_content: float=85 # in percentage
         self.gene: dict[str,float] # This forms the reaction
+        self.current_biome: biome=self.get_current_biome()
         # of certain events. Omit teaching
     def think(self,thought: dict[str,event])->tuple[bool,bool]:
         """Think about something"""
@@ -421,8 +422,8 @@ class life:
         return False
     def _del__(self):
         """run when deleted(dead)"""
-        print(f"[{WORLD.time()}]",self.name,f"is dead due to {self.dead_reason}, in biome {self.get_certain_biome().name}!",file=LOGFILE)
-    def get_certain_biome(self)->biome:
+        print(f"[{WORLD.time()}]",self.name,f"is dead due to {self.dead_reason}, in biome {self.current_biome.name}!",file=LOGFILE)
+    def get_current_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position.y/BIOME_SIZE)][int(self.position.x/BIOME_SIZE)]
     def nutrition2energy(self):
@@ -440,9 +441,12 @@ class life:
         self.energy-=shiver_heat*.5
     def sweat(self):
         """sweat to cooldown"""
-        sweat_cooling: float=(self.body_temp-37.5)*0.2
+        # According to Penman equation
+        total_heat_load: float=.1*(self.current_biome.temperature-self.body_temp)+1898.925*(self.body_temp-37)
+        sweat_cooling: float=total_heat_load*min(1,(self.body_temp-37)*.3)*.01
         self.body_temp-=sweat_cooling
-        self.water_content-=sweat_cooling/2
+        self.water_content=(self.get_weight()*self.water_content-sweat_cooling*.8)/self.get_weight()
+        self.energy-=sweat_cooling*.01
     def move(self,dx: Optional[float]=None,dy: Optional[float]=None)->Callable[...,Any]:
         """move to somewhere"""
         # This should consider the event in this position, and 
@@ -455,6 +459,7 @@ class life:
         self.position.x=max(0,min(WORLD.width-1,self.position.x+dx))
         self.position.y=max(0,min(WORLD.height-1,self.position.y+dy))
         self.energy-=math.sqrt((ox-self.position.x)**2+(oy-self.position.y)**2)*.1
+        self.current_biome=self.get_current_biome()
         def pos()->tuple[float,float]:
             return (ox-self.position.x,oy-self.position.y)
         return pos
@@ -588,7 +593,7 @@ class life:
         c: Callable[...,tuple[float,float]]=self.move()
         dx,dy=c()
         dt: float=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(400)+\
-            (self.get_certain_biome().temperature-self.body_temp)/((self.fat_index or 1)*20)
+            (self.current_biome.temperature-self.body_temp)/((self.fat_index or 1)*20)
         self.body_temp+=dt
         if self.body_temp>38:
             cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
@@ -596,11 +601,11 @@ class life:
             self.think({"be hot":event("be hot",WORLD.time(),
                         self.position,self.change_feeling(-.4))
                         })
-        if self.get_certain_biome().temperature>38:
+        if self.current_biome.temperature>38:
             if random.random()<.01:
                 # hot adapt
                 self.hydrolysis(.05)
-        elif self.get_certain_biome().temperature<25:
+        elif self.current_biome.temperature<25:
             if random.random()<.01:
                 # cold adapt
                 self.store_fat(90)

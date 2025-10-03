@@ -83,7 +83,7 @@ def age2weight(age: float)->float:
     """convert age to weight"""
     v: float=0
     s: float=0
-    if age<100/3:
+    if age<.333:
         v,s=29,5
     else:
         v,s=16,20
@@ -383,6 +383,7 @@ class life:
         self.tick+=tick
         self.age+=tick/31536000
         self.weight=age2weight(self.age)
+        self.storage_fat=self.weight*self.fat_index
     def listen(self)->list[str]:
         """listen to the voices"""
         global voices
@@ -420,7 +421,7 @@ class life:
         return False
     def _del__(self):
         """run when deleted(dead)"""
-        print(self.name,f"is dead due to {self.dead_reason}, in biome {self.get_certain_biome().name}!",file=LOGFILE)
+        print(f"[{WORLD.time()}]",self.name,f"is dead due to {self.dead_reason}, in biome {self.get_certain_biome().name}!",file=LOGFILE)
     def get_certain_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position.y/BIOME_SIZE)][int(self.position.x/BIOME_SIZE)]
@@ -444,6 +445,8 @@ class life:
         self.water_content-=sweat_cooling/2
     def move(self,dx: Optional[float]=None,dy: Optional[float]=None)->Callable[...,Any]:
         """move to somewhere"""
+        # This should consider the event in this position, and 
+        # change the idea.
         calmness: float=self.personality["calmness"].value
         dx=dx or random.uniform(-self.energy,self.energy)/calmness
         dy=dy or random.uniform(-self.energy,self.energy)/calmness
@@ -451,7 +454,7 @@ class life:
         oy: float=self.position.y
         self.position.x=max(0,min(WORLD.width-1,self.position.x+dx))
         self.position.y=max(0,min(WORLD.height-1,self.position.y+dy))
-        self.energy-=math.sqrt((ox-self.position.x)**2+(oy-self.position.y)**2)/10
+        self.energy-=math.sqrt((ox-self.position.x)**2+(oy-self.position.y)**2)*.1
         def pos()->tuple[float,float]:
             return (ox-self.position.x,oy-self.position.y)
         return pos
@@ -497,13 +500,13 @@ class life:
             else:
                 self.in_sleep=True
             if self.in_sleep:
-                print(self.name,f"is in sleep at time {WORLD.time()}!",file=LOGFILE)
+                print(self.name,f"is in sleep at tick {WORLD.time()}!",file=LOGFILE)
         if self.in_sleep:
             self.sleep()
             self.dream()
             if self.energy>=80:
                 self.in_sleep=False
-                print(self.name,f"woke up just at time {WORLD.time()}!",file=LOGFILE)
+                print(self.name,f"woke up just at tick {WORLD.time()}!",file=LOGFILE)
             else:
                 self.hydrolysis(80-self.nutrition)
             return
@@ -763,7 +766,7 @@ class environment:
                                         position(x+random.uniform(0,BIOME_SIZE),y+random.uniform(0,BIOME_SIZE),"food")
                                         )
                         )
-        # """
+        """
         root: tk.Tk=tk.Tk()
         root.title("Color Grid Map")
         frame: tk.Frame=tk.Frame(root)
@@ -791,6 +794,7 @@ class environment:
     def mainloop(self):
         """mainloop"""
         global voices
+        self.tick+=1
         for i in self.obj:
             i.update()
         deled: int=0
@@ -801,7 +805,6 @@ class environment:
                 del self.lifes[time-deled]
                 deled+=1
         voices.clear()
-        self.tick+=1
 
 # example usage
 personality={
@@ -829,10 +832,10 @@ while 1:
     if not WORLD.lifes:
         print(f"All lifes are dead in {WORLD.tick} ticks!",file=LOGFILE)
         break
-    if WORLD.tick%5000==0 and WORLD.tick>0:
+    if WORLD.tick&4095==0 and WORLD.tick>0:
         # LOGFILE.close()
         LOGFILE=open("log.txt","a+",encoding="utf-8") # type: ignore
-        print("5000 tick passed!")
+        print("4096 tick passed!")
     WORLD.mainloop()
     time.sleep(interval-((time.monotonic()-t)%interval))
 else:

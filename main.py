@@ -670,6 +670,8 @@ class life:
     def touch_food(self)->bool:
         """check if touching food"""
         for i in WORLD.obj:
+            if abs(self.position.x-i.pos.x)>5 or abs(self.position.y-i.pos.y)>5:
+                continue
             if self.position.distance(i.pos)<5 and "food"==i.name:
                 return True
         return False
@@ -760,12 +762,13 @@ class environment:
         self.map=split(shuffle(map,{BIOMES[0]:1}),self.width//BIOME_SIZE)
         for x,n in enumerate(self.map):
             for y,i in enumerate(n):
-                for _ in range(int(max(i.water_required,1))):
-                    if random.random()<self.water_content:
+                for _ in range(int(max(i.water_required/10,1))):
+                    if random.random()<self.water_content/10**math.log10(self.water_content):
                         self.obj.append(dobj("food",
                                         position(x+random.uniform(0,BIOME_SIZE),y+random.uniform(0,BIOME_SIZE),"food")
                                         )
                         )
+        print(len(self.obj))
         """
         root: tk.Tk=tk.Tk()
         root.title("Color Grid Map")

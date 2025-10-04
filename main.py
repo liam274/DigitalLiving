@@ -32,7 +32,8 @@ FEELING_RANGE: int=POSITIVE_RANGE+NEGATIVE_RANGE
 FEELINGS: tuple[str,...]=POSITIVE_FEELINGS+NEGATIVE_FEELINGS
 
 POSTIVE_PERSONALITIES: tuple[str,...]=("positivity","attention_span","memory_index",
-                "memory_range","calmness","curiosity","patience","hear_limit")
+                "memory_range","calmness","curiosity","patience",
+                "hear_limit","shyness")
 NEGATIVE_PERSONALITIES: tuple[str,...]=("negativity",)
 PERSONALITIES: tuple[str,...]=POSTIVE_PERSONALITIES+NEGATIVE_PERSONALITIES
 
@@ -97,7 +98,7 @@ def chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
         return ()
     random.shuffle(new)
     return tuple(i for i in new[:count])
-def mixture(a: dict[str,float],b: dict[str,float])-> dict[str,float]:
+def mixture(a: dict[str,float],b: dict[str,float])->dict[str,float]:
     """mixture together, used in gene"""
     result: dict[str,float]={}
     for nam,val in a.items():
@@ -108,10 +109,12 @@ def _print(*content: Any,sep: str=" ",end: str="\n",file: TextIO=sys.stdout)->No
     """Print that auto-flushes"""
     print(*content,sep=sep,end=end,file=file)
     file.flush()
-def sort_chose(l: list[Any],t: Any,count: int=1)-> tuple[Any,...]:
+def sort_chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     l=[i for i in l if i is not t]
     l.sort(key=lambda a:a.position_.distance(t.position_))
     return tuple(i for i in l[:count])
+def between(a: float,upper: float,lower: float):
+    return upper>a>lower
 # classes
 
 ## data
@@ -391,7 +394,8 @@ class life:
               "energy","is_alive","in_sleep","body_temp",
               "storage_fat","weight","extra_weight",
               "fat_index","dead_reason","water_content",
-              "gene","current_biome","hug2heat")
+              "gene","current_biome","hug2heat","stomach",
+              "stomach_max")
     def __init__(self,name: str,age: float,
                  personality: dict[str,personalities],pos: position):
         self.mind_: mind=mind(name,age,personality)
@@ -415,6 +419,8 @@ class life:
         self.gene: dict[str,float]={} # This forms the reaction
         self.current_biome: biome=self.get_current_biome()
         self.hug2heat: set[life]={self}
+        self.stomach: float=0
+        self.stomach_max: float=100
         # of certain events. Omit teaching
     def think(self,thought: dict[str,event])->tuple[bool,bool]:
         """Think about something"""
@@ -516,12 +522,12 @@ class life:
         """move to somewhere"""
         # This should consider the event in this position, and 
         # change the idea.
-        calmness: float=self.personality["calmness"].value*20
+        factor: float=self.personality["calmness"].value*20*self.personality["shyness"].value
         if _pos:
             dx=_pos.x-self.position_.x
             dy=_pos.y-self.position_.y
-        dx=dx or random.uniform(-self.energy,self.energy)/calmness
-        dy=dy or random.uniform(-self.energy,self.energy)/calmness
+        dx=dx or random.uniform(-self.energy,self.energy)/factor
+        dy=dy or random.uniform(-self.energy,self.energy)/factor
         ox: float=self.position_.x
         oy: float=self.position_.y
         self.position_.x=max(0,min(WORLD.width-1,self.position_.x+dx))
@@ -565,8 +571,9 @@ class life:
             self.storage_fat+=self.nutrition-limit
             # dehydration condensation
             self.water_content+=(self.nutrition-limit)*.5
-            self.extra_weight+=(self.nutrition-limit)*.9
-            # the density of fat is .9g/ml
+            self.extra_weight+=(self.nutrition-limit)*1.4
+            # the density of fat is .9 g/ml, while water is 1 g/ml
+            self.stomach-=(self.nutrition-limit)/4
             self.nutrition-=self.nutrition-limit
             self.think({"store fat":event(
                 "store fat",WORLD.time(),self.position_,
@@ -648,6 +655,20 @@ class life:
             self.think({"eat food":event("eat food",WORLD.time(),self.position_,
                         self.change_feeling(.5))
                         })
+            self.stomach+=5
+        if between(self.stomach,self.stomach_max*.9,self.stomach_max*.7):
+            self.think({"be full":event("be full",WORLD.time(),
+                        self.position_,self.change_feeling(.6)
+                    )})
+        elif self.stomach>self.stomach_max*.9:
+            self.think({
+                "be too full":event("be too full",WORLD.time(),
+                        self.position_,self.change_feeling(-.1)
+                    )
+            })
+        if self.stomach>self.stomach_max+30:
+            self.is_alive=False
+            self.dead_reason="Stomach Rupture"
         """解放人性
         if self.storage_fat>0 and self.energy>90:
             a: life=chose(WORLD.lifes,self)
@@ -928,7 +949,8 @@ personality: dict[str,personalities]={
     "calmness":personalities("calmness",0.4),
     "curiosity":personalities("curiosity",0.6),
     "patience":personalities("patience",0.4),
-    "hear_limit":personalities("hear_limit",50)
+    "hear_limit":personalities("hear_limit",50),
+    "shyness":personalities("shyness",.9)
 }
 adam_home: position=position(0,0,"adam's")
 WORLD: environment=environment(20,20,2/3,[],[])

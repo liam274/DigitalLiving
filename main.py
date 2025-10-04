@@ -417,7 +417,11 @@ class life:
         """listen to the voices"""
         global voices
         result: list[str]=[]
+        hear_limit: float=self.personality["hear_limit"].value
         for position,string in voices.items():
+            if (position.x-self.position.x)>hear_limit\
+                 or (position.y-self.position.y)>hear_limit:
+                continue
             if string in self.mind.memory.data:
                 continue
             s: str=""
@@ -427,8 +431,8 @@ class life:
                                random.uniform(0,.5)*position.distance(self.position)
                                )
                 ) # Hard to hear
-                if a in PRINTABLE or \
-                    position.distance(self.position)>self.personality["hear_limit"].value:
+                if a in PRINTABLE and \
+                    position.distance(self.position)<hear_limit:
                     s+=a
             result.append(s)
         return result
@@ -493,9 +497,10 @@ class life:
         self.current_biome=self.get_current_biome()
         def pos()->tuple[float,float]:
             return (ox-self.position.x,oy-self.position.y)
+        print(self.name,pos(),file=LOGFILE)
         return pos
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
-        """+ + for positive feeling, - for negative feeling"""
+        """+ \\+ for positive feeling, - for negative feeling"""
         result: dict[str,emotion_stat]={
             i:emotion_stat(i,emo.value+(n*(-1)**(int(i in POSITIVE_FEELINGS)+1))/self.personality["calmness"].value)
             for i,emo in self.mind.feeling.items()
@@ -506,6 +511,54 @@ class life:
         return result
     def dream(self):
         pass
+    def sleep(self):
+        """sleep to recover energy, but lose nutrition"""
+        self.energy=min(100,self.energy+.005)
+        self.nutrition=max(0,self.nutrition-.002)
+    def is_starving(self)->bool:
+        """check if starving"""
+        return self.nutrition<20
+    def touch_food(self)->bool:
+        """check if touching food"""
+        for i in WORLD.obj:
+            if abs(self.position.x-i.pos.x)>5 or abs(self.position.y-i.pos.y)>5:
+                continue
+            if self.position.distance(i.pos)<5 and "food"==i.name:
+                return True
+        return False
+    def store_fat(self,limit: float=100):
+        """store fat for energy"""
+        if self.nutrition>limit:
+            self.storage_fat+=self.nutrition-limit
+            # dehydration condensation
+            self.water_content+=(self.nutrition-limit)*.5
+            self.extra_weight+=(self.nutrition-limit)*.9
+            # the density of fat is .9g/ml
+            self.nutrition-=self.nutrition-limit
+            self.think({"store fat":event(
+                "store fat",WORLD.time(),self.position,
+                self.change_feeling(.5)
+            )})
+            self.fat_index=self.storage_fat/self.get_weight()
+    def hydrolysis(self,count: float)->bool:
+        """do hydrolysis to fat"""
+        if self.storage_fat<=0:
+            return False
+        self.nutrition+=self.storage_fat*count
+        self.water_content-=self.storage_fat*count*.8
+        self.fat_index*=1-count
+        self.storage_fat*=1-count
+        return True
+    def find_food(self):
+        """find food to eat"""
+        self.move()
+        self.think({"find food":event(
+            "find food",WORLD.time(),self.position,
+            self.change_feeling(.5)
+        )})
+    def get_weight(self)->float:
+        """return the exact weight"""
+        return self.weight+self.extra_weight
     def update(self):
         """update the mainloop"""
         # grow
@@ -558,10 +611,12 @@ class life:
         if self.storage_fat>0 and self.energy>90:
             self.sex(chose(WORLD.lifes,self))
             # """
+        positivity: float=self.personality["positivity"].value
         if not self.mind.memory.data:
             result: list[str]=self.listen()
             if not result:
-                self.change_feeling(-.7/self.personality["positivity"].value)
+                self.mind.feeling=self.change_feeling(-.7/positivity)
+                print(self.name+": I feel so lonely...",file=LOGFILE)
                 return
             for i in result:
                 if i in self.mind.concepts:
@@ -572,15 +627,15 @@ class life:
                 self.think({choosen:event(choosen,WORLD.time(),
                             self.position,self.mind.feeling)
                         })
+                self.move()
                 # later, I shell change it to sorting it of the simularity from concepts, and find out the most positive one
+            print(self.name,"memory initalized...",file=LOGFILE)
             return
-        positivity: float=self.personality["positivity"].value
         negativity: float=self.personality["negativity"].value
         calmness: float=self.personality["calmness"].value
         if self.is_starving():
-            self.mind.feeling["stressed"].value+=negativity/(calmness*2)
             self.think({
-                "be starving":event("be starving",WORLD.time(),self.position,self.mind.feeling),
+                "be starving":event("be starving",WORLD.time(),self.position,self.change_feeling(0,{"stressed":negativity/(calmness*2)})),
                 "find food":event("find food",WORLD.time(),self.position,self.change_feeling(0,{"hopeful":.5/calmness}))
                 }
             )
@@ -620,8 +675,8 @@ class life:
                     )
         # heat perform system
         self.think({
-            f"pos({self.position.x},{self.position.y})":
-            event(f"pos({self.position.x},{self.position.y})",WORLD.time(),self.position,self.mind.feeling)
+            f"goto pos({self.position.x},{self.position.y})":
+            event(f"goto pos({self.position.x},{self.position.y})",WORLD.time(),self.position,self.mind.feeling)
         })
         most: event=self.most_want2do()
         dx: float
@@ -705,54 +760,6 @@ class life:
         )})
         print(self.name,"and",another.name,"made a baby:",baby.name,file=LOGFILE)
         return baby
-    def sleep(self):
-        """sleep to recover energy, but lose nutrition"""
-        self.energy=min(100,self.energy+.005)
-        self.nutrition=max(0,self.nutrition-.002)
-    def is_starving(self)->bool:
-        """check if starving"""
-        return self.nutrition<20
-    def touch_food(self)->bool:
-        """check if touching food"""
-        for i in WORLD.obj:
-            if abs(self.position.x-i.pos.x)>5 or abs(self.position.y-i.pos.y)>5:
-                continue
-            if self.position.distance(i.pos)<5 and "food"==i.name:
-                return True
-        return False
-    def store_fat(self,limit: float=100):
-        """store fat for energy"""
-        if self.nutrition>limit:
-            self.storage_fat+=self.nutrition-limit
-            # dehydration condensation
-            self.water_content+=(self.nutrition-limit)*.5
-            self.extra_weight+=(self.nutrition-limit)*.9
-            # the density of fat is .9g/ml
-            self.nutrition-=self.nutrition-limit
-            self.think({"store fat":event(
-                "store fat",WORLD.time(),self.position,
-                self.change_feeling(.5)
-            )})
-            self.fat_index=self.storage_fat/self.get_weight()
-    def hydrolysis(self,count: float)->bool:
-        """do hydrolysis to fat"""
-        if self.storage_fat<=0:
-            return False
-        self.nutrition+=self.storage_fat*count
-        self.water_content-=self.storage_fat*count*.8
-        self.fat_index*=1-count
-        self.storage_fat*=1-count
-        return True
-    def find_food(self):
-        """find food to eat"""
-        self.move()
-        self.think({"find food":event(
-            "find food",WORLD.time(),self.position,
-            self.change_feeling(.5)
-        )})
-    def get_weight(self)->float:
-        """return the exact weight"""
-        return self.weight+self.extra_weight
 class human(life):
     pass
 
@@ -843,6 +850,12 @@ class environment:
     def mainloop(self):
         """mainloop"""
         global voices
+        for t,i in enumerate(self.map):
+            for t2 in range(len(i)):
+                voices.update({
+                    position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),""):
+                    random_string()
+                })
         self.tick+=1
         for i in self.obj:
             i.update()
@@ -856,7 +869,7 @@ class environment:
         voices.clear()
 
 # example usage
-personality={
+personality: dict[str,personalities]={
     "positivity":personalities("positivity",0.7),
     "negativity":personalities("negativity",0.3),
     "attention_span":personalities("attention_span",0.5),

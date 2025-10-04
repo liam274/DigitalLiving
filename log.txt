@@ -1,9 +1,143 @@
+亞當 (-16.91501877189702, 0)
+亞當 memory initalized...
 夏娃 found food!
 夏娃: I don't want to store fat
 夏娃: I want to eat food
-夏娃 is in sleep at tick 11!
-[14] 夏娃 is dead due to dehydration, in biome highland!
+夏娃 (-61.88948727821543, 5)
+亞當 found food!
+亞當: I want to bllviMKqWXf
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當 (16.91501877189702, 0)
+夏娃 (-225.35441638848107, 0)
+亞當: I want to store fat
+亞當: I want to eat food
+亞當: I want to store fat
+亞當: I want to eat food
+亞當: I don't want to bllviMKqWXf
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I want to be warm
+亞當 (0, 0)
+夏娃 (-43.34588081328127, -126.64754303741907)
+亞當: I don't want to eat food
+亞當: I don't want to bllviMKqWXf
+亞當: I want to store fat
+亞當: I don't want to eat food
+亞當: I want to bllviMKqWXf
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當 (0, -181.4347099968008)
+夏娃 (-63.410215520022234, -18.57763692158798)
+亞當: I don't want to eat food
+亞當: I want to bllviMKqWXf
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(0,0)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當 (-104.29001918354358, -78.6109332697506)
+夏娃 (45.65683771523402, -3.6606721044837798)
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(16.91501877189702,0)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(0,0)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(0,0)
+亞當: I want to goto pos(0,181.4347099968008)
+亞當 (-117.03291018962706, 92.0150454780271)
+夏娃 (-45.65683771523402, 30.358976787223042)
+亞當: I don't want to goto pos(16.91501877189702,0)
+亞當: I don't want to goto pos(0,0)
+亞當: I want to be warm
+亞當: I don't want to goto pos(0,0)
+亞當: I don't want to goto pos(0,0)
+亞當: I want to be warm
+亞當: I don't want to goto pos(0,0)
+亞當: I don't want to goto pos(0,181.4347099968008)
+亞當: I want to goto pos(0,181.4347099968008)
+亞當: I want to goto pos(104.29001918354358,260.0456432665514)
+亞當 (-124.8767443290715, -124.12308864817567)
+夏娃 (0, -78.74068749743915)
+亞當: I don't want to be warm
+亞當: I want to goto pos(0,0)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(0,0)
+亞當: I want to goto pos(0,181.4347099968008)
+亞當: I don't want to goto pos(0,181.4347099968008)
+亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I want to goto pos(221.32292937317064,168.0305977885243)
+亞當 (-17.92155153922937, 10.216488078687178)
+夏娃 (42.10539533660682, -75.57800498031767)
+亞當: I want to goto pos(0,0)
+亞當: I don't want to be warm
+亞當: I want to goto pos(0,0)
+亞當: I want to goto pos(0,181.4347099968008)
+亞當: I don't want to goto pos(0,181.4347099968008)
+亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
+亞當 (31.407164348856895, -43.77852778926035)
+夏娃 (-42.10539533660682, 51.746147512709996)
+[9] 夏娃 is dead due to hypothermia, in biome snowland!
 夏娃 died at age 0.00 years old.
-[6000] 亞當 is dead due to dehydration, in biome snow-mountain!
+亞當: I don't want to goto pos(0,0)
+亞當: I don't want to goto pos(0,181.4347099968008)
+亞當: I want to goto pos(0,181.4347099968008)
+亞當: I want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
+亞當 (-11.174199353021208, 2.195978094050872)
+亞當: I want to goto pos(0,181.4347099968008)
+亞當: I want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
+亞當: I want to goto pos(364.1212252414715,281.9371983580128)
+亞當: I want to goto pos(332.7140608926146,325.71572614727313)
+亞當 (-2.0972021414663686, 4.33719389548537)
+亞當: I want to goto pos(104.29001918354358,260.0456432665514)
+亞當: I want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I want to goto pos(364.1212252414715,281.9371983580128)
+亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
+亞當: I don't want to goto pos(332.7140608926146,325.71572614727313)
+亞當: I want to goto pos(332.7140608926146,325.71572614727313)
+亞當: I want to goto pos(343.8882602456358,323.51974805322226)
+亞當 (24.368850515223585, -11.850251457962202)
+亞當: I want to goto pos(221.32292937317064,168.0305977885243)
+亞當: I want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
+亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
+亞當: I want to goto pos(364.1212252414715,281.9371983580128)
+亞當: I want to goto pos(332.7140608926146,325.71572614727313)
+亞當: I don't want to goto pos(332.7140608926146,325.71572614727313)
+亞當: I don't want to goto pos(343.8882602456358,323.51974805322226)
+亞當: I want to goto pos(343.8882602456358,323.51974805322226)
+亞當: I want to goto pos(345.9854623871022,319.1825541577369)
+亞當 (31.4912285546327, 34.97250635866396)
+亞當 is in sleep at tick 14!
+[17] 亞當 is dead due to dehydration, in biome river!
 亞當 died at age 0.00 years old.
-All lifes are dead in 6000 ticks!
+All lifes are dead in 17 ticks!

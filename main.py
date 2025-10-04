@@ -17,6 +17,7 @@ import numpy as np
 import tkinter as tk
 import os
 import sys
+from names_dataset import NameDataset # type: ignore
 
 # constants
 POSITIVE_FEELINGS: tuple[str,...]=("happy","surprised","trusting","joyful",
@@ -94,6 +95,12 @@ def chose(l: list[Any],t: Any)->Any:
     while t is r:
         r=random.choice(l)
     return r
+def mixture(a: dict[str,float],b: dict[str,float])-> dict[str,float]:
+    result: dict[str,float]={}
+    for nam,val in a.items():
+        u: float=random.random()
+        result[nam]=val*u+b[nam]*(1-u)
+    return result
 # classes
 
 ## data
@@ -454,7 +461,7 @@ class life:
         return False
     def _del__(self):
         """run when deleted(dead)"""
-        print(f"[{WORLD.time()}]",self.name,f"is dead due to {self.dead_reason}, in biome {self.current_biome.name}!",file=LOGFILE)
+        print(f"[{WORLD.time()}]",self.name,f"is dead due to {self.dead_reason}, in {self.current_biome.name}!",file=LOGFILE)
     def get_current_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position.y/BIOME_SIZE)][int(self.position.x/BIOME_SIZE)]
@@ -483,7 +490,7 @@ class life:
         """move to somewhere"""
         # This should consider the event in this position, and 
         # change the idea.
-        calmness: float=self.personality["calmness"].value
+        calmness: float=self.personality["calmness"].value*20
         if _pos:
             dx=_pos.x-self.position.x
             dy=_pos.y-self.position.y
@@ -607,7 +614,7 @@ class life:
             self.think({"eat food":event("eat food",WORLD.time(),self.position,
                         self.change_feeling(.5))
                         })
-        """
+        # """解放人性
         if self.storage_fat>0 and self.energy>90:
             self.sex(chose(WORLD.lifes,self))
             # """
@@ -624,12 +631,12 @@ class life:
                     break
             else:
                 choosen: str=random.choice(result)
+                # later, I shell change it to sorting it of the simularity from concepts, and find out the most positive one
                 self.think({choosen:event(choosen,WORLD.time(),
                             self.position,self.mind.feeling)
                         })
-                self.move()
-                # later, I shell change it to sorting it of the simularity from concepts, and find out the most positive one
-            print(self.name,"memory initalized...",file=LOGFILE)
+            self.move() # move makes memory and feelings
+            print(self.name,"memory initialization...",file=LOGFILE)
             return
         negativity: float=self.personality["negativity"].value
         calmness: float=self.personality["calmness"].value
@@ -675,8 +682,8 @@ class life:
                     )
         # heat perform system
         self.think({
-            f"goto pos({self.position.x},{self.position.y})":
-            event(f"goto pos({self.position.x},{self.position.y})",WORLD.time(),self.position,self.mind.feeling)
+            f"go to pos({self.position.x},{self.position.y})":
+            event(f"go to pos({self.position.x},{self.position.y})",WORLD.time(),self.position,self.mind.feeling)
         })
         most: event=self.most_want2do()
         dx: float
@@ -693,7 +700,7 @@ class life:
         if self.body_temp>38:
             cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
             self.body_temp-=min((self.body_temp-36)*.1, cooling_rate)
-            self.think({"be hot":event("be hot",WORLD.time(),
+            self.think({"feel hot":event("feel hot",WORLD.time(),
                         self.position,self.change_feeling(-.4))
                         })
         if self.current_biome.temperature>38:
@@ -709,13 +716,13 @@ class life:
             if self.fat_index>15 or dt>1:
                 self.sweat()
         elif self.body_temp<30:
-            self.think({"be cold":event("be cold",WORLD.time(),
+            self.think({"feel cold":event("feel cold",WORLD.time(),
                         self.position,self.change_feeling(-.2)
                     )})
             self.nutrition2energy()
             self.shiver()
         elif 34<self.body_temp<37:
-            self.think({"be warm":event("be warm",WORLD.time(),
+            self.think({"feel warm":event("feel warm",WORLD.time(),
                         self.position,self.change_feeling(.2)
                     )})
         if self.body_temp>44:
@@ -747,6 +754,7 @@ class life:
         )
         baby: life=life(f"{self.name}&{another.name}-baby",0,personality,pos)
         WORLD.append_life(baby)
+        baby.gene=mixture(self.gene,another.gene)
         self.energy-=20
         another.energy-=20
         self.body_temp+=.5
@@ -885,7 +893,11 @@ WORLD: environment=environment(20,20,2/3,[],[])
 WORLD.init()
 adam=human("亞當",0,personality,adam_home)
 eve=human("夏娃",0,personality,position(5,5,"eve's"))
-WORLD.append_life(adam,eve)
+humans: list[human]=[adam,eve]
+nd: dict[str,list[str]]=NameDataset().get_top_names(4,use_first_names=True,country_alpha2="GB")["GB"] # type: ignore
+for i in nd["M"]+nd["F"]:
+    humans.append(human(i,0,personality,adam_home))
+WORLD.append_life(*humans)
 FPS: int=6000
 interval: float=1/FPS
 t: float=time.monotonic()

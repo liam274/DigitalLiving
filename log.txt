@@ -1,143 +1,250 @@
-亞當 (-16.91501877189702, 0)
-亞當 memory initalized...
+亞當 (0, -7.768474380357818)
+亞當 memory initialization...
 夏娃 found food!
 夏娃: I don't want to store fat
 夏娃: I want to eat food
-夏娃 (-61.88948727821543, 5)
+夏娃 (5, -0.6061746533379129)
+David found food!
+David: I don't want to store fat
+David: I want to eat food
+David (0, 2.111825385518399)
+Paul found food!
+Paul: I don't want to store fat
+Paul: I want to eat food
+Paul (0, -8.719249756705292)
+John (0, 3.9462936461180504)
+John memory initialization...
+James found food!
+James: I don't want to store fat
+James: I want to eat food
+James (-11.312560267992106, -6.971239688072991)
+Sarah found food!
+Sarah: I don't want to store fat
+Sarah: I want to eat food
+Sarah (0.855533180182567, -1.3855394852716003)
+Emma found food!
+Emma: I don't want to store fat
+Emma: I want to eat food
+Emma (9.419113644931631, 11.60182209615976)
+Laura found food!
+Laura: I don't want to store fat
+Laura: I want to eat food
+Laura (-6.351654813528994, 7.184562182611492)
+Lisa found food!
+Lisa: I don't want to store fat
+Lisa: I want to eat food
+Lisa (-2.1521020702043687, -9.233435500721583)
 亞當 found food!
-亞當: I want to bllviMKqWXf
+亞當: I want to IsEmfTQDx
 亞當: I don't want to store fat
 亞當: I want to eat food
-亞當 (16.91501877189702, 0)
-夏娃 (-225.35441638848107, 0)
-亞當: I want to store fat
+亞當 (-8.511019399822775, -6.7232119700360045)
+夏娃 found food!
+夏娃 (0, 5.606174653337913)
+David found food!
+David (-11.862874128470537, -3.747697151656169)
+Paul found food!
+Paul (-2.303484570773506, -4.732287912482413)
+John found food!
+John: I want to 2t6z
+John: I don't want to store fat
+John: I want to eat food
+John (-10.418113418002257, 2.586113467219306)
+James (-8.682101441639986, 1.080520914714981)
+Sarah (-8.083823901431174, 8.586879650630282)
+Emma (5.931134459464687, -11.84831065604815)
+Laura (11.209330972075499, -4.9972655401599795)
+Lisa found food!
+Lisa (0.9367369403158037, -2.023852187608256)
+亞當 found food!
+亞當: I don't want to store fat
 亞當: I want to eat food
-亞當: I want to store fat
+亞當: I want to IsEmfTQDx
+亞當: I don't want to store fat
 亞當: I want to eat food
-亞當: I don't want to bllviMKqWXf
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I want to be warm
-亞當 (0, 0)
-夏娃 (-43.34588081328127, -126.64754303741907)
-亞當: I don't want to eat food
-亞當: I don't want to bllviMKqWXf
+亞當: I don't want to IsEmfTQDx
+亞當: I don't want to go to pos(9.541670326611271,9.233435500721583)
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當 (4.805124743150607, 5.848838127490616)
+夏娃 (-10.522722294335988, -9.222474004249012)
+David found food!
+David (11.92588383742979, 4.462536484414322)
+[3] David is dead due to hypothermia, in snow-mountain!
+David died at age 0.00 years old.
+Paul found food!
+Paul (-8.56641528680326, -9.033548825361848)
+[3] Paul is dead due to hypothermia, in snow-mountain!
+Paul died at age 0.00 years old.
+John found food!
+John: I don't want to store fat
+John: I want to eat food
+John: I want to 2t6z
+John: I don't want to store fat
+John: I want to eat food
+John: I don't want to 2t6z
+John: I don't want to go to pos(32.21904842567809,24.43663253489617)
+John: I want to feel warm
+John: I don't want to store fat
+John: I want to eat food
+John (-0.3752699439362033, -10.647033713227898)
+James found food!
+James (6.433506600415658, -3.2926027692455975)
+Sarah (4.179576363194069, 12.061778901842594)
+Emma found food!
+Emma (1.6686892203057155, -5.598093445482434)
+Laura found food!
+Laura (-9.97267320784725, -4.637477225831127)
+Lisa (11.986152820460589, -11.064366556070638)
+亞當: I don't want to IsEmfTQDx
 亞當: I want to store fat
 亞當: I don't want to eat food
-亞當: I want to bllviMKqWXf
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當 (0, -181.4347099968008)
-夏娃 (-63.410215520022234, -18.57763692158798)
+亞當: I want to IsEmfTQDx
+亞當: I want to go to pos(9.541670326611271,9.233435500721583)
+亞當: I don't want to feel warm
+亞當: I want to store fat
 亞當: I don't want to eat food
-亞當: I want to bllviMKqWXf
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(0,0)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當 (-104.29001918354358, -78.6109332697506)
-夏娃 (45.65683771523402, -3.6606721044837798)
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(16.91501877189702,0)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(0,0)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(0,0)
-亞當: I want to goto pos(0,181.4347099968008)
-亞當 (-117.03291018962706, 92.0150454780271)
-夏娃 (-45.65683771523402, 30.358976787223042)
-亞當: I don't want to goto pos(16.91501877189702,0)
-亞當: I don't want to goto pos(0,0)
-亞當: I want to be warm
-亞當: I don't want to goto pos(0,0)
-亞當: I don't want to goto pos(0,0)
-亞當: I want to be warm
-亞當: I don't want to goto pos(0,0)
-亞當: I don't want to goto pos(0,181.4347099968008)
-亞當: I want to goto pos(0,181.4347099968008)
-亞當: I want to goto pos(104.29001918354358,260.0456432665514)
-亞當 (-124.8767443290715, -124.12308864817567)
-夏娃 (0, -78.74068749743915)
-亞當: I don't want to be warm
-亞當: I want to goto pos(0,0)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(0,0)
-亞當: I want to goto pos(0,181.4347099968008)
-亞當: I don't want to goto pos(0,181.4347099968008)
-亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I want to goto pos(221.32292937317064,168.0305977885243)
-亞當 (-17.92155153922937, 10.216488078687178)
-夏娃 (42.10539533660682, -75.57800498031767)
-亞當: I want to goto pos(0,0)
-亞當: I don't want to be warm
-亞當: I want to goto pos(0,0)
-亞當: I want to goto pos(0,181.4347099968008)
-亞當: I don't want to goto pos(0,181.4347099968008)
-亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
-亞當 (31.407164348856895, -43.77852778926035)
-夏娃 (-42.10539533660682, 51.746147512709996)
-[9] 夏娃 is dead due to hypothermia, in biome snowland!
-夏娃 died at age 0.00 years old.
-亞當: I don't want to goto pos(0,0)
-亞當: I don't want to goto pos(0,181.4347099968008)
-亞當: I want to goto pos(0,181.4347099968008)
-亞當: I want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
-亞當 (-11.174199353021208, 2.195978094050872)
-亞當: I want to goto pos(0,181.4347099968008)
-亞當: I want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I don't want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
-亞當: I want to goto pos(364.1212252414715,281.9371983580128)
-亞當: I want to goto pos(332.7140608926146,325.71572614727313)
-亞當 (-2.0972021414663686, 4.33719389548537)
-亞當: I want to goto pos(104.29001918354358,260.0456432665514)
-亞當: I want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I don't want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I want to goto pos(364.1212252414715,281.9371983580128)
-亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
-亞當: I don't want to goto pos(332.7140608926146,325.71572614727313)
-亞當: I want to goto pos(332.7140608926146,325.71572614727313)
-亞當: I want to goto pos(343.8882602456358,323.51974805322226)
-亞當 (24.368850515223585, -11.850251457962202)
-亞當: I want to goto pos(221.32292937317064,168.0305977885243)
-亞當: I want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I don't want to goto pos(346.19967370224214,292.15368643669996)
-亞當: I don't want to goto pos(364.1212252414715,281.9371983580128)
-亞當: I want to goto pos(364.1212252414715,281.9371983580128)
-亞當: I want to goto pos(332.7140608926146,325.71572614727313)
-亞當: I don't want to goto pos(332.7140608926146,325.71572614727313)
-亞當: I don't want to goto pos(343.8882602456358,323.51974805322226)
-亞當: I want to goto pos(343.8882602456358,323.51974805322226)
-亞當: I want to goto pos(345.9854623871022,319.1825541577369)
-亞當 (31.4912285546327, 34.97250635866396)
-亞當 is in sleep at tick 14!
-[17] 亞當 is dead due to dehydration, in biome river!
+亞當: I want to go to pos(9.541670326611271,9.233435500721583)
+亞當: I want to go to pos(41.32588481489552,31.052546886147987)
+亞當 (4.496556150436991, -8.995343213375108)
+夏娃 found food!
+夏娃 (8.109696114854394, -4.748657638769448)
+John: I don't want to 2t6z
+John: I want to store fat
+John: I don't want to eat food
+John: I want to 2t6z
+John: I want to go to pos(32.21904842567809,24.43663253489617)
+John: I don't want to feel warm
+John: I want to store fat
+John: I don't want to eat food
+John: I want to go to pos(32.21904842567809,24.43663253489617)
+John: I want to go to pos(33.16129152111838,29.774721099604896)
+John (-6.323585073111879, 9.5949046947499)
+James (11.078666076266325, 9.75666618415314)
+Sarah (7.1900563220579015, 9.21835124462796)
+Emma found food!
+Emma (-5.0017910246345405, 7.551637684119292)
+Laura found food!
+Laura (6.2222900438218876, 9.311636388926651)
+Lisa found food!
+Lisa (1.5791171736891156, -8.585801095221886)
+亞當 found food!
+亞當: I don't want to go to pos(9.541670326611271,9.233435500721583)
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當: I don't want to go to pos(9.541670326611271,9.233435500721583)
+亞當: I don't want to go to pos(41.32588481489552,31.052546886147987)
+亞當: I want to go to pos(41.32588481489552,31.052546886147987)
+亞當: I want to go to pos(19.2413096685258,52.95251590762)
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當 (-12.04043873032509, -0.5464822612365516)
+夏娃 found food!
+夏娃 (2.4130261794815944, -6.017434296348203)
+John found food!
+John: I want to go to pos(32.21904842567809,24.43663253489617)
+John: I don't want to feel warm
+John: I want to store fat
+John: I don't want to eat food
+John: I want to go to pos(32.21904842567809,24.43663253489617)
+John: I want to go to pos(33.16129152111838,29.774721099604896)
+John: I don't want to go to pos(33.16129152111838,29.774721099604896)
+John: I don't want to go to pos(14.74475351808881,61.947859120995105)
+John: I want to store fat
+John: I don't want to eat food
+John (-5.509702724160043, -2.810379670170505)
+James found food!
+James (-11.118979151786622, 0.2691486600191091)
+[5] James is dead due to hypothermia, in snow-mountain!
+James died at age 0.00 years old.
+Sarah found food!
+Sarah (3.239407632524447, -11.28525833968676)
+[5] Sarah is dead due to hypothermia, in snow-mountain!
+Sarah died at age 0.00 years old.
+Emma found food!
+Emma (-5.483246307630662, -6.062923122453121)
+[5] Emma is dead due to hypothermia, in highland!
+Emma died at age 0.00 years old.
+Laura (-6.155748133321428, -9.725437951058936)
+Lisa (-11.759529119555573, -9.782043649846955)
+[5] Lisa is dead due to hypothermia, in sea!
+Lisa died at age 0.00 years old.
+亞當: I don't want to eat food
+亞當: I want to go to pos(9.541670326611271,9.233435500721583)
+亞當: I want to go to pos(41.32588481489552,31.052546886147987)
+亞當: I don't want to go to pos(41.32588481489552,31.052546886147987)
+亞當: I don't want to go to pos(19.2413096685258,52.95251590762)
+亞當: I want to store fat
+亞當: I don't want to eat food
+亞當: I want to go to pos(19.2413096685258,52.95251590762)
+亞當: I want to go to pos(0,25.100464019640047)
+亞當: I don't want to feel cold
+亞當 (5.47626120485026, -6.010150913790227)
+[6] 亞當 is dead due to hypothermia, in sea!
 亞當 died at age 0.00 years old.
-All lifes are dead in 17 ticks!
+夏娃 found food!
+夏娃 (0, 1.0836138534030084)
+John: I want to store fat
+John: I don't want to eat food
+John: I want to go to pos(32.21904842567809,24.43663253489617)
+John: I want to go to pos(33.16129152111838,29.774721099604896)
+John: I don't want to go to pos(33.16129152111838,29.774721099604896)
+John: I don't want to go to pos(14.74475351808881,61.947859120995105)
+John: I want to store fat
+John: I don't want to eat food
+John: I want to go to pos(14.74475351808881,61.947859120995105)
+John: I want to go to pos(12.04043873032509,25.646946280876598)
+John (2.8806212581102884, -4.5010999885981136)
+[6] John is dead due to hypothermia, in sea!
+John died at age 0.00 years old.
+Laura (9.575161747192077, -5.464867404781813)
+[6] Laura is dead due to hypothermia, in snowland!
+Laura died at age 0.00 years old.
+夏娃 found food!
+夏娃 (-1.2330837274415516, 2.298119612944866)
+夏娃 found food!
+夏娃 (0.06666282589642702, 0.9207834313558756)
+夏娃 found food!
+夏娃 (1.1664209015451246, -4.046789300571689)
+夏娃 found food!
+夏娃 (-2.217567795166937, 2.2129850484324294)
+夏娃 found food!
+夏娃 (-7.361408990735185, 6.9887233535305775)
+夏娃 found food!
+夏娃 (-5.59396353782491, -6.029298244012217)
+夏娃 found food!
+夏娃 (0.29254144193826015, -1.8256907794579433)
+夏娃 found food!
+夏娃 (9.967849364161237, 10.663019436470105)
+夏娃 found food!
+夏娃 (4.912549517627536, 7.72309952727165)
+夏娃 (-4.350211760971672, 0)
+夏娃 found food!
+夏娃 (-0.22376878690543656, 0)
+夏娃 found food!
+夏娃 (4.32780152500625, -9.27037346926188)
+夏娃 found food!
+夏娃 (-6.5588026975340386, 5.264582942706129)
+夏娃 found food!
+夏娃 (4.229043025785693, -7.250278095201574)
+夏娃 found food!
+夏娃 (2.5759386946192047, 2.435126691849966)
+夏娃 found food!
+夏娃 (-0.712123771670192, -7.50553221651095)
+夏娃 found food!
+夏娃 (-2.1421532994517953, -3.522360609633459)
+夏娃 found food!
+夏娃 (-9.527157717402055, 6.172048727299215)
+夏娃 found food!
+夏娃 (4.112057739380258, 1.1063651134224237)
+夏娃 found food!
+夏娃 (-0.589965158819048, -0.39319669793977674)
+夏娃 found food!
+夏娃 (-9.052661381237169, -4.774668334194558)
+夏娃 found food!
+夏娃 (-8.809502924717158, -8.726823456706455)
+[28] 夏娃 is dead due to hypothermia, in snow-mountain!
+夏娃 died at age 0.00 years old.
+All lifes are dead in 28 ticks!

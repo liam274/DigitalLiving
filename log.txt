@@ -1,0 +1,145 @@
+亞當 found food!
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當 (0, -5.982074857322678)
+夏娃 found food!
+夏娃: I don't want to store fat
+夏娃: I want to eat food
+夏娃 (-6.442109461494194, 5)
+David found food!
+David: I don't want to store fat
+David: I want to eat food
+David (-7.170993782309156, -8.354769011717481)
+Paul found food!
+Paul: I don't want to store fat
+Paul: I want to eat food
+Paul (7.170993782309156, -2.660381712542396)
+John found food!
+John: I don't want to store fat
+John: I want to eat food
+John (0, -11.595997337026539)
+James found food!
+James: I don't want to store fat
+James: I want to eat food
+James (0, 6.401982955471773)
+Sarah found food!
+Sarah: I don't want to store fat
+Sarah: I want to eat food
+Sarah (-9.83192193138805, -0.9243444591820982)
+Emma found food!
+Emma: I don't want to store fat
+Emma: I want to eat food
+Emma (-9.349004040494842, 2.9081245316223274)
+Laura found food!
+Laura: I don't want to store fat
+Laura: I want to eat food
+Laura (-0.13197683619219447, -2.7583737148644936)
+Lisa found food!
+Lisa: I don't want to store fat
+Lisa: I want to eat food
+Lisa (-1.6378613738833359, 7.517081618375524)
+亞當 found food!
+亞當 (-5.3632064210474475, -8.63260006484106)
+夏娃 found food!
+夏娃 (6.645662997835486, 0)
+David found food!
+David (-10.199018632422586, 10.592922491706767)
+Paul found food!
+Paul (-3.7609549391895953, -7.067557794803546)
+John found food!
+John (1.1450836360471257, 11.408613597403354)
+James (-3.9229724469386085, 6.90142509821958)
+Sarah (1.5098016936363052, -11.490789974884184)
+Emma found food!
+Emma (-4.035488314382064, 11.744443127894233)
+Laura (-3.0264358017768345, -6.156102674624966)
+Lisa (0.252955060339346, 8.148398181115883)
+亞當 (4.965205041179438, -12.238538213713742)
+夏娃 found food!
+夏娃 (4.796446463658708, -0.5173441429536878)
+David (-0.07543301965631599, 3.462689892781775)
+Paul (-8.661546659768078, 6.594464000288747)
+John (-1.0851011421354073, -11.778011387536363)
+James (2.6093751389046886, -6.1360228999165844)
+Sarah (0.3186901739922092, 6.930645460703957)
+Emma (-0.9408770923945653, -6.933242831129785)
+Laura (3.983990547322051, 1.952297723209643)
+Lisa (-11.771975637131199, 4.685205518789786)
+亞當 (8.884215180974692, 9.037011507697517)
+夏娃 found food!
+夏娃 (0, 0.5173441429536878)
+David (8.758718952153146, -6.327114703333347)
+Paul (2.605546888663163, 6.172940400577693)
+John found food!
+John (-0.04491274674116852, -7.911772788764973)
+James found food!
+James (2.327865656212431, -7.131735032864132)
+Sarah found food!
+Sarah (-3.8720120230178736, 7.551105977879878)
+Emma found food!
+Emma (10.10182934909042, 1.5389171652580131)
+Laura found food!
+Laura (-4.551370297925342, 6.359632792334452)
+Lisa found food!
+Lisa (-7.411748988053908, -5.4849451095471125)
+亞當 (-3.4226073893594133, 0.6462505578967068)
+夏娃 found food!
+夏娃 (0, 0)
+[5] 夏娃 is dead due to hypothermia, in sea!
+夏娃 died at age 0.00 years old.
+David (10.452392680105675, -0.3795800835377481)
+Paul found food!
+Paul (4.020601329236193, 8.141859119616157)
+John found food!
+John (-4.557999683209999, 1.2479429333094618)
+James found food!
+James (2.405958271761989, 0)
+Sarah found food!
+Sarah (9.483535872426792, 0)
+Emma found food!
+Emma (9.72285394210908, 0)
+Laura found food!
+Laura (-1.6980920401621322, -7.395011500537158)
+Lisa found food!
+Lisa (-9.818564593720017, 1.0566158358175306)
+亞當 found food!
+亞當 (-2.0196490621527836, -0.8216387269498293)
+David found food!
+David (5.851485088414329, -8.964900355225755)
+Paul found food!
+Paul (-7.293532172103447, -8.887411815924676)
+[6] Paul is dead due to hypothermia, in mountain!
+Paul died at age 0.00 years old.
+John found food!
+John (-4.87410735993187, 7.726316915004951)
+[6] John is dead due to hypothermia, in rocky!
+John died at age 0.00 years old.
+James found food!
+James (6.2310899025993365, -4.625729684709217)
+[6] James is dead due to hypothermia, in mountain!
+James died at age 0.00 years old.
+Sarah found food!
+Sarah (-0.5641256036061826, -8.825066080067064)
+[6] Sarah is dead due to hypothermia, in mountain!
+Sarah died at age 0.00 years old.
+Emma found food!
+Emma (11.207408540049283, 10.63673832591489)
+[6] Emma is dead due to hypothermia, in highland!
+Emma died at age 0.00 years old.
+Laura found food!
+Laura (3.774848065184619, -7.367683100660958)
+[6] Laura is dead due to hypothermia, in highland!
+Laura died at age 0.00 years old.
+Lisa found food!
+Lisa (-6.909952212445832, 4.783757513509439)
+[6] Lisa is dead due to hypothermia, in mountain!
+Lisa died at age 0.00 years old.
+亞當 found food!
+亞當 (-10.440105347189277, 8.300958080640473)
+[7] 亞當 is dead due to hypothermia, in rocky!
+亞當 died at age 0.00 years old.
+David found food!
+David (-5.992071639879754, -0.3777018746021721)
+[7] David is dead due to hypothermia, in rocky!
+David died at age 0.00 years old.
+All lifes are dead in 7 ticks!

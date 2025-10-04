@@ -18,7 +18,6 @@ import tkinter as tk
 import os
 import sys
 from names_dataset import NameDataset # type: ignore
-from pprint import pprint
 
 # constants
 POSITIVE_FEELINGS: tuple[str,...]=("happy","surprised","trusting","joyful",
@@ -37,7 +36,7 @@ POSTIVE_PERSONALITIES: tuple[str,...]=("positivity","attention_span","memory_ind
 NEGATIVE_PERSONALITIES: tuple[str,...]=("negativity",)
 PERSONALITIES: tuple[str,...]=POSTIVE_PERSONALITIES+NEGATIVE_PERSONALITIES
 
-_printABLE: str=string.ascii_lowercase+string.ascii_uppercase+string.digits+" "
+PRINTABLE: str=string.ascii_lowercase+string.ascii_uppercase+string.digits+" "
 
 WEATHERS: tuple[str,...]=("sunny","cloudy","rainy","stormy","snowy","foggy")
 
@@ -60,7 +59,7 @@ def most_frequent(l: list[Any],default: Any)->Any:
     return random.choice(tuple(k for k,v in data.items() if v==max_freq))
 def random_string()->str:
     """return a random string"""
-    return "".join(random.choice(_printABLE) for _ in range(random.randint(1,20)))
+    return "".join(random.choice(PRINTABLE) for _ in range(random.randint(1,20)))
 def shuffle(l: list[Any],repeat_weight: dict[Any,float]={})->list[Any]:
     """Shuffle the list,allowing some elements to repeat based on weight."""
     r: list[Any]=[]
@@ -91,12 +90,13 @@ def age2weight(age: float)->float:
     else:
         v,s=16,20
     return 80/(1+math.exp((v-age)/s))
-def chose(l: list[Any],t: Any)->Any:
+def chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     """chose without repeat"""
     new: list[Any]=[i for i in l if i is not t]
     if not new:
-        return None
-    return random.choice(new)
+        return ()
+    random.shuffle(new)
+    return tuple(i for i in new[:count])
 def mixture(a: dict[str,float],b: dict[str,float])-> dict[str,float]:
     """mixture together, used in gene"""
     result: dict[str,float]={}
@@ -108,6 +108,10 @@ def _print(*content: Any,sep: str=" ",end: str="\n",file: TextIO=sys.stdout)->No
     """Print that auto-flushes"""
     print(*content,sep=sep,end=end,file=file)
     file.flush()
+def sort_chose(l: list[Any],t: Any,count: int=1)-> tuple[Any,...]:
+    l=[i for i in l if i is not t]
+    l.sort(key=lambda a:a.position_.distance(t.position_))
+    return tuple(i for i in l[:count])
 # classes
 
 ## data
@@ -170,7 +174,21 @@ class event:
     time: int
     venue: position
     feeling: dict[str,emotion_stat]=field(default_factory=dict[str,emotion_stat])
-    what_to_do: list[str]=field(default_factory=list[str])
+    what_to_do: list[tuple[Callable[...,Any],
+        list[tuple[Callable[...,Any],tuple[Any,...]]]]]=field(
+            default_factory=list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
+        )
+    # list[
+    #   tuple[
+    #     Callable[...,Any], #function
+    #     list[
+    #       tuple[
+    #         Callable[...,Any],
+    #         tuple[Any,...] # arguments
+    #       ]
+    #     ]
+    #   ]
+    # ]
 voices: dict[position,str]={}
 POINTLESS_EVENT: event=event("",0,position(0,0,""),{})
 
@@ -373,7 +391,7 @@ class life:
               "energy","is_alive","in_sleep","body_temp",
               "storage_fat","weight","extra_weight",
               "fat_index","dead_reason","water_content",
-              "gene","current_biome")
+              "gene","current_biome","hug2heat")
     def __init__(self,name: str,age: float,
                  personality: dict[str,personalities],pos: position):
         self.mind_: mind=mind(name,age,personality)
@@ -396,6 +414,7 @@ class life:
         self.water_content: float=85 # in percentage
         self.gene: dict[str,float]={} # This forms the reaction
         self.current_biome: biome=self.get_current_biome()
+        self.hug2heat: set[life]={self}
         # of certain events. Omit teaching
     def think(self,thought: dict[str,event])->tuple[bool,bool]:
         """Think about something"""
@@ -445,7 +464,7 @@ class life:
                                random.uniform(0,.5)*position.distance(self.position_)
                                )
                 ) # Hard to hear
-                if a in _printABLE and \
+                if a in PRINTABLE and \
                     position.distance(self.position_)<hear_limit:
                     s+=a
             result.append(s)
@@ -573,6 +592,14 @@ class life:
     def get_weight(self)->float:
         """return the exact weight"""
         return self.weight+self.extra_weight
+    def hug2gain_heat(self,*another: "life"):
+        """hug to gain heat"""
+        for i in another:
+            self.hug2heat.add(i)
+        self.think({"hug to gain heat":event(
+            "hug to gain heat",WORLD.time(),self.position_,
+            self.change_feeling(.5)
+        )})
     def update(self):
         """update the mainloop"""
         # grow
@@ -621,13 +648,14 @@ class life:
             self.think({"eat food":event("eat food",WORLD.time(),self.position_,
                         self.change_feeling(.5))
                         })
-        # """解放人性
+        """解放人性
         if self.storage_fat>0 and self.energy>90:
             a: life=chose(WORLD.lifes,self)
             if a:
                 self.sex(a)
             # """
         positivity: float=self.personality["positivity"].value
+        calmness: float=self.personality["calmness"].value
         if not self.mind_.memory.data:
             result: list[str]=self.listen()
             if not result:
@@ -641,13 +669,14 @@ class life:
             else:
                 choosen: str=random.choice(result)
                 # later, I shell change it to sorting it of the simularity from concepts, and find out the most positive one
+                # Because of loness, feeling will drops
+                self.mind_.feeling=self.change_feeling(-.6/calmness)
                 self.think({choosen:event(choosen,WORLD.time(),
                             self.position_,self.mind_.feeling)
                         })
             self.move() # move makes memory and feelings
             _print(self.name,"memory initialization...",file=LOGFILE)
         negativity: float=self.personality["negativity"].value
-        calmness: float=self.personality["calmness"].value
         if self.is_starving():
             self.think({
                 "be starving":event("be starving",WORLD.time(),self.position_,self.change_feeling(0,{"stressed":negativity/(calmness*2)})),
@@ -668,7 +697,8 @@ class life:
         const2: float=-1/negativity
         if self.think({name:e})[1]:
             for i in tuple(self.mind_.thoughts.data[0].values())[0].what_to_do:
-                self.__dict__[i]()
+                # list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
+                i[0](*(func(*arg) for func,arg in i[1]))
             for t,(_name,emotion) in enumerate(e.feeling.items()):
                 # loop through the feeling and change it if it's remembered
                 self.mind_.history_feeling_tick[_name]+=1
@@ -703,7 +733,7 @@ class life:
             c=self.move()
         dx,dy=c()
         dt: float=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(400)+\
-            (self.current_biome.temperature-self.body_temp)/((self.fat_index or 1)*20)
+            (self.current_biome.temperature-self.body_temp)/((self.fat_index or 1)*20*len(self.hug2heat))
         self.body_temp+=dt
         if self.body_temp>38:
             cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
@@ -731,7 +761,8 @@ class life:
             self.shiver()
         elif 34<self.body_temp<37:
             self.think({"feel warm":event("feel warm",WORLD.time(),
-                        self.position_,self.change_feeling(.2)
+                        self.position_,self.change_feeling(.2),
+                        [(self.hug2gain_heat,[(sort_chose,(WORLD.lifes,self,2))])]
                     )})
         if self.body_temp>44:
             self.is_alive=False
@@ -904,15 +935,9 @@ WORLD: environment=environment(20,20,2/3,[],[])
 WORLD.init()
 adam=human("亞當",0,personality,adam_home)
 eve=human("夏娃",0,personality,position(5,5,"eve's"))
-humans: list[human]=[adam,eve]
-# """
 nd: dict[str,list[str]]=NameDataset().get_top_names(4,use_first_names=True,country_alpha2="GB")["GB"] # type: ignore
-for i in nd["M"]+nd["F"]:
-    humans.append(human(i,0,personality,adam_home))
-pprint(humans)
-sys.stdout.flush()
-# """
-WORLD.append_life(adam,eve)
+humans: list[human]=[adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"])]
+WORLD.append_life(adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"]))
 FPS: int=6000
 interval: float=1/FPS
 t: float=time.monotonic()
@@ -932,3 +957,5 @@ else:
     _print("???")
 LOGFILE.close()
 _print("Closed!")
+for i in humans:
+    _print(i.name,tuple(i.name for i in sort_chose(humans,i,len(humans))))

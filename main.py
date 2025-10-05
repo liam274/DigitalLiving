@@ -18,10 +18,10 @@ import os
 import sys
 import weakref
 from array import array
-import datetime
 import numpy as np
 from names_dataset import NameDataset # type: ignore
 import types
+import heapq
 
 # constants
 POSITIVE_FEELINGS: tuple[str,...]=("happy","surprised","trusting","joyful",
@@ -67,10 +67,10 @@ def random_string()->str:
     return "".join(random.choice(PRINTABLE) for _ in range(random.randint(1,20)))
 def shuffle(l: list[Any],repeat_weight: dict[Any,float]={})->list[Any]:
     """Shuffle the list,allowing some elements to repeat based on weight."""
-    r: list[Any]=[]
+    r: list[Any]=[None]*len(l)
     counter: Counter[Any]=Counter(l)
     last: Any=None
-    for _ in range(len(l)):
+    for i in range(len(l)):
         candidates=list(counter.keys())
         if last is not None and last in candidates:
             weight=repeat_weight.get(last,0.5)
@@ -80,7 +80,7 @@ def shuffle(l: list[Any],repeat_weight: dict[Any,float]={})->list[Any]:
         if not candidates:
             candidates=list(counter.keys())
         choice=random.choice(candidates)
-        r.append(choice)
+        r[i]=choice
         counter[choice]-=1
         if counter[choice]<=0:
             del counter[choice]
@@ -100,8 +100,7 @@ def chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     new: list[Any]=[i for i in l if i is not t]
     if not new:
         return ()
-    random.shuffle(new)
-    return tuple(i for i in new[:count])
+    return tuple(random.sample(new,count))
 def mixture(a: dict[str,dict[str,float]],b: dict[str,dict[str,float]])->dict[str,dict[str,float]]:
     """mixture together, used in gene"""
     result: dict[str,dict[str,float]]={}
@@ -120,17 +119,15 @@ def _print(*content: Any,sep: str=" ",end: str="\n",file: TextIO=sys.stdout):
 def sort_chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     """sort it and chose it"""
     l=[i for i in l if i is not t]
-    l.sort(key=lambda a:a.position_.distance(t.position_))
-    return tuple(i for i in l[:count])
+    return tuple(heapq.nsmallest(count,l,key=lambda a:a.position_.square_distance(t.position_)))
 def between(a: float,upper: float,lower: float):
     """check if is between"""
-    return upper>a>lower
+    return lower<a<upper
 def format_duration(seconds: int)->str:
     """format the tick and output as date"""
-    delta=datetime.timedelta(seconds=seconds)
-    days=delta.days
-    hours,remainder=divmod(delta.seconds,3600)
-    minutes,seconds=divmod(remainder,60)
+    days, remainder = divmod(seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
     return f"{days} days {hours:02}:{minutes:02}:{seconds:02}"
 # classes
 
@@ -181,6 +178,9 @@ class position:
     def y(self,value: float):
         """set y"""
         self.data[1]=value
+    def square_distance(self,other: "position")->float:
+        """return the euclidean distance without square. Good for comparing"""
+        return (self.x-other.x)**2+(self.y-other.y)**2
     def distance(self,other: "position")->float:
         """return euclidean distance"""
         return float(np.linalg.norm(np.array(self.data)-np.array(other.data)))
@@ -194,7 +194,7 @@ class personalities:
     """state personalities"""
     name: str
     value: float
-@dataclass(slots=True)
+@dataclass(slots=True,frozen=True)
 class event:
     """state event"""
     name: str
@@ -222,7 +222,7 @@ POINTLESS_EVENT: event=event("",0,position(0,0,""),{})
 
 ## environment classes
 
-@dataclass(slots=True)
+@dataclass(slots=True,frozen=True)
 class biome:
     """define the biome,a data structure"""
     name: str
@@ -262,10 +262,11 @@ class memory:
         self.recent_event: queue[event]=queue(100)
     def recall(self,name: str,memory_index: float)->dict[str,emotion_stat]:
         """Recall memory and return. If the event is not recorded,it will fake one"""
+        memory_index*=10
         if name in self.data:
             return {
                 name:emotion_stat(name,
-                    i.value+(i.value*random.uniform(.001,.2)/(10*memory_index))) # noise factors
+                    i.value+(i.value*random.uniform(.001,.2)/memory_index)) # noise factors
                  for name,i in self.data[name].feeling.items()
                 }
         return {i:emotion_stat(i,(random.random() or .001)) for i in FEELINGS} # fake some memory
@@ -365,7 +366,7 @@ class unconscious_mind:
         noticed: bool=False
         positivity: float=self.personality["positivity"].value # Optimize performance
         negativity: float=self.personality["negativity"].value
-        patience: float=self.personality["patience"].value
+        patience: float=self.personality["patience"].value/10
         attention_span: float=self.personality["attention_span"].value
         memory_index: float=self.personality["memory_index"].value
         for details,_event in thought.items():
@@ -377,13 +378,13 @@ class unconscious_mind:
                 if name in POSITIVE_FEELINGS:
                     self.feeling[name].value=(value-self.feeling[name].value)*positivity*(
                         # more time no this emotion more this,same below
-                        (self.history_feeling_tick[name]*10)/patience
+                        self.history_feeling_tick[name]/patience
                         # ten as the factor to low down personalities.patience
                         )
                     _sum+=self.feeling[name].value
                 else:
                     self.feeling[name].value+=(value-self.feeling[name].value)*\
-                        negativity*((self.history_feeling_tick[name]*10)/patience)
+                        negativity*(self.history_feeling_tick[name]/patience)
                     _sum-=self.feeling[name].value
             if abs(_sum)>attention_span:
                 # not matter it's too positive or too negative
@@ -397,12 +398,8 @@ class unconscious_mind:
                 self.concepts[details]=temp
                 noticed=True
                 want=_sum>0
-                if want:
-                    for i in POSITIVE_FEELINGS:
-                        self.history_feeling_tick[i]=1
-                else:
-                    for i in NEGATIVE_FEELINGS:
-                        self.history_feeling_tick[i]=1
+                for i in (POSITIVE_FEELINGS if want else NEGATIVE_FEELINGS):
+                    self.history_feeling_tick[i]=1
         self.thoughts.enqueue(thought)
         return (want,noticed)
     def most_want2do(self)->event:
@@ -530,8 +527,8 @@ class life:
         result: list[str]=[]
         hear_limit: float=self.personality["hear_limit"].value
         for position,string in voices.items():
-            if (position.x-self.position_.x)>hear_limit\
-                 or (position.y-self.position_.y)>hear_limit:
+            if abs(position.x-self.position_.x)>hear_limit\
+                 or abs(position.y-self.position_.y)>hear_limit:
                 continue
             if string in self.unconscious.memory.data:
                 continue
@@ -542,8 +539,7 @@ class life:
                                random.uniform(0,.5)*position.distance(self.position_)
                                )
                 ) # Hard to hear
-                if a in PRINTABLE and \
-                    position.distance(self.position_)<hear_limit:
+                if a in PRINTABLE:
                     s+=a
             result.append(s)
         return result
@@ -663,8 +659,8 @@ class life:
         # should have a dream here
     def sleep(self):
         """sleep to recover energy, but lose nutrition"""
-        self.energy=min(100,self.energy+.005)
-        self.nutrition=max(0,self.nutrition-.002)
+        self.energy=min(100,self.energy+6.9e-06)
+        self.nutrition=max(0,self.nutrition-2.7e-06)
     def is_starving(self)->bool:
         """check if starving"""
         return self.nutrition<20
@@ -673,7 +669,7 @@ class life:
         for i in WORLD.obj:
             if abs(self.position_.x-i.pos.x)>5 or abs(self.position_.y-i.pos.y)>5:
                 continue
-            if self.position_.distance(i.pos)<5 and "food"==i.name:
+            if self.position_.square_distance(i.pos)<25 and "food"==i.name:
                 return True
         return False
     def store_fat(self,limit: float=100):
@@ -921,7 +917,7 @@ class life:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore
             return None
-        if self.position_.distance(another.position_)>10:
+        if self.position_.square_distance(another.position_)>100:
             return None # too far away
         personality: dict[str,personalities]={}
         for i in PERSONALITIES:
@@ -1053,8 +1049,8 @@ class environment:
         """mainloop"""
         global voices
         # """
-        for t,i in enumerate(self.map):
-            for t2 in range(len(i)):
+        for t,n in enumerate(self.map):
+            for t2 in range(len(n)):
                 if random.random()<.3:
                     voices.update({
                         position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
@@ -1063,15 +1059,18 @@ class environment:
                     })
         # """
         self.tick+=1
-        for i in self.obj:
-            i.update()
-        deled: int=0
-        for time,i in enumerate(self.lifes[:]):
+        for n in self.obj:
+            n.update()
+        time: int=0
+        i: life
+        while time<len(self.lifes):
+            i=self.lifes[time]
             i.update()
             if i.is_dead():
                 _print(i.name,f"died at age {i.age:.2f} years old.",file=LOGFILE)
-                del self.lifes[time-deled]
-                deled+=1
+                self.lifes.pop()
+            else:
+                time+=1
         voices.clear()
 
 # example usage

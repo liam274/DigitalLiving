@@ -181,7 +181,7 @@ class event:
     time: int
     venue: position
     feeling: dict[str,emotion_stat]=field(default_factory=dict[str,emotion_stat])
-    what_to_do: list[tuple[Callable[...,Any],
+    what2do: list[tuple[Callable[...,Any],
         list[tuple[Callable[...,Any],tuple[Any,...]]]]]=field(
             default_factory=list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
         )
@@ -634,23 +634,23 @@ class life:
     def get_weight(self)->float:
         """return the exact weight"""
         return self.weight+self.extra_weight
-    def hug2gain_heat(self,*another: "life"):
+    def hug2gain_heat(self,another: tuple["life"]):
         """hug to gain heat"""
         for i in another:
             self.hug2heat.add(i)
         self.unconscious_thinking({"hug to gain heat":event(
             "hug to gain heat",WORLD.time(),self.position_,
-            self.change_feeling(.5)
+            self.change_feeling(.7)
         )})
+        _print(", ".join(i.name for i in self.hug2heat),"hug to gain heat!",file=LOGFILE)
     def update(self):
         """update the mainloop"""
         # grow
         self.mind_.grow(1)
         self.grow(1)
         # use up
-        self.nutrition-=.01
-        self.energy-=.01
-        self.water_content-=.01
+        self.energy-=1.6534391534391535e-06
+        self.water_content-=3.858024691358025e-06
         self.nutrition2energy()
         # death operations
         if self.water_content<25:
@@ -685,7 +685,7 @@ class life:
         if self.touch_food():
             _print(self.name,"found food!",file=LOGFILE)
             self.nutrition+=20
-            self.water_content+=3
+            self.water_content+=5
             self.store_fat()
             self.unconscious_thinking({"eat food":event("eat food",WORLD.time(),self.position_,
                         self.change_feeling(.5))
@@ -751,10 +751,11 @@ class life:
         name,e=next(reversed(self.unconscious.memory.data.items()))
         const1: float=1/positivity
         const2: float=-1/negativity
-        if self.unconscious_thinking({name:e})[1]:
-            for i in tuple(self.unconscious.thoughts.data[0].values())[0].what_to_do:
+        if all(self.unconscious_thinking({name:e})):
+            for i in tuple(self.unconscious.thoughts.data[0].values())[0].what2do:
                 # list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
                 i[0](*(func(*arg) for func,arg in i[1]))
+                _print("Doing",tuple(self.unconscious.thoughts.data[0].values())[0].name)
             for t,(_name,emotion) in enumerate(e.feeling.items()):
                 # loop through the feeling and change it if it's remembered
                 self.unconscious.history_feeling_tick[_name]+=1
@@ -975,6 +976,8 @@ class environment:
         voices.clear()
 
 # example usage
+if __name__!="__main__":
+    exit()
 personality: dict[str,personalities]={
     "positivity":personalities("positivity",0.7),
     "negativity":personalities("negativity",0.3),

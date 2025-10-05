@@ -217,7 +217,7 @@ class event:
     #     ]
     #   ]
     # ]
-voices: dict[position,str]={}
+voices: dict[tuple[Union["environment","life"],position],str]={}
 POINTLESS_EVENT: event=event("",0,position(0,0,""),{})
 
 ## environment classes
@@ -514,6 +514,14 @@ class life:
             self.personality["calmness"].value
             ) # memorize the new friend
         self.friends.add(obj)
+        self.communicate((random_string()+" "+obj.name,))
+    def request(self,obj: "life",request: str):
+        """Request somebody for something"""
+        obj.recieve(request)
+    def recieve(self,request: str):
+        # Must recieve the request, then
+        # do the specific action
+        self.__dict__[request]()
     def grow(self,tick: int):
         """grow in body"""
         # simply add the self tick,which does not matters to the emotion,but body
@@ -526,11 +534,14 @@ class life:
         global voices
         result: list[str]=[]
         hear_limit: float=self.personality["hear_limit"].value
-        for position,string in voices.items():
+        for (lif,position),string in voices.items():
             if abs(position.x-self.position_.x)>hear_limit\
                  or abs(position.y-self.position_.y)>hear_limit:
                 continue
             if string in self.unconscious.memory.data:
+                continue
+            if lif is self:
+                # skip own word
                 continue
             s: str=""
             for n in string:
@@ -543,11 +554,11 @@ class life:
                     s+=a
             result.append(s)
         return result
-    def communicate(self,message: list[str]):
+    def communicate(self,message: tuple[str]):
         """talk"""
         global voices
         for i in message:
-            voices[self.position_]=i
+            voices[(self,self.position_)]=i
             _print(self.name+":",i,file=LOGFILE)
     def percieve_event(self,e: event)->None:
         """see an event and act la"""
@@ -637,7 +648,7 @@ class life:
         oy: float=self.position_.y
         self.position_.x=max(0,min(WORLD.width-1,self.position_.x+dx))
         self.position_.y=max(0,min(WORLD.height-1,self.position_.y+dy))
-        self.energy-=math.sqrt((ox-self.position_.x)**2+(oy-self.position_.y)**2)*.1
+        self.energy-=math.sqrt((ox-self.position_.x)**2+(oy-self.position_.y)**2)*.00001
         self.current_biome=self.get_current_biome()
         def pos()->tuple[float,float]:
             return (ox-self.position_.x,oy-self.position_.y)
@@ -853,7 +864,7 @@ class life:
             if name not in self.unconscious.concepts: # make concepts
                 m: str=most_frequent(self.listen(),random_string())
                 self.unconscious.concepts.update({m:{m:e}})
-                self.communicate([m])
+                self.communicate((m,))
         if self.water_content<60:
             self.unconscious_thinking({"be thirsty":event("be thirsty",
                         WORLD.time(),self.position_,self.change_feeling(-.4)
@@ -1053,8 +1064,8 @@ class environment:
             for t2 in range(len(n)):
                 if random.random()<.3:
                     voices.update({
-                        position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
-                            t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),""):
+                        (self,position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
+                            t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),"")):
                         random_string()
                     })
         # """
@@ -1097,9 +1108,13 @@ nd: dict[str,list[str]]=NameDataset().get_top_names(4, # type: ignore
     use_first_names=True,country_alpha2="GB")["GB"]
 humans: list[human]=[adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"])]
 WORLD.append_life(adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"]))
+for i in humans:
+    _print(i.name,tuple(i.name for i in
+        sort_chose(humans,i,len(humans))))
 FPS: int=6000
 interval: float=1/FPS
-t: float=time.monotonic()
+# t: float=time.monotonic()
+start: float=time.time()
 while 1:
     if not WORLD.lifes:
         _print(f"All lifes are dead in {WORLD.tick} ticks!",file=LOGFILE)
@@ -1108,15 +1123,13 @@ while 1:
     if WORLD.tick&255==0 and WORLD.tick>0:
         LOGFILE.close()
         LOGFILE=open("log.txt","a+",encoding="utf-8") # type: ignore
-        _print("256 tick passed!")
     if WORLD.tick&4095==0 and WORLD.tick>0:
         _print("4096 tick passed!")
     WORLD.mainloop()
-    time.sleep(interval-((time.monotonic()-t)%interval))
+    # time.sleep(interval-((time.monotonic()-t)%interval))
 else:
-    _print("???")
+    pass # I don't know why I need this,
+         # but it keeps the bug away
 LOGFILE.close()
 _print("Closed!")
-for i in humans:
-    _print(i.name,tuple(i.name for i in
-        sort_chose(humans,i,len(humans))))
+_print("Consumed",time.time()-start,"second.")

@@ -1,99 +1,164 @@
-亞當 found food!
-亞當: I don't want to store fat
-亞當: I want to eat food
-亞當 (0, -4.118602959272273)
+亞當 (-0.045952146867036234, -1.4722090217084454)
+亞當 memory initialization...
+亞當: I don't want to 8wy7o6nkT
+亞當 (0.045952146867036234, 1.4722090217084454)
 夏娃 found food!
 夏娃: I don't want to store fat
 夏娃: I want to eat food
-夏娃 (5, -13.543414796151062)
-David found food!
-David: I don't want to store fat
-David: I want to eat food
-David (0, 0.3105252832258758)
+夏娃 (5, -11.017288095907915)
+David (0, 0)
+David memory initialization...
+David: I don't want to 6rarrnU
+David (-5.191678804201358, 0)
 Paul found food!
 Paul: I don't want to store fat
 Paul: I want to eat food
-Paul (0, -4.522061065228464)
+Paul (-7.535037548081552, 0)
 John found food!
 John: I don't want to store fat
 John: I want to eat food
-John (0, 8.330138741274862)
+John (-12.91967378281053, 0)
 James found food!
 James: I don't want to store fat
 James: I want to eat food
-James (0, 0)
+James (12.13789763506146, 0)
 Sarah found food!
 Sarah: I don't want to store fat
 Sarah: I want to eat food
-Sarah (-7.525966384492667, -7.882603698631871)
+Sarah (-6.056429536752898, 0)
 Emma found food!
 Emma: I don't want to store fat
 Emma: I want to eat food
-Emma (7.089477650358692, 3.4752838170474947)
+Emma (-12.947217800296634, -3.734586057208326)
 Laura found food!
 Laura: I don't want to store fat
 Laura: I want to eat food
-Laura (0.4364887341339756, 4.407319881584376)
+Laura (3.271743044916054, -0.00573711150457612)
 Lisa found food!
 Lisa: I don't want to store fat
 Lisa: I want to eat food
-Lisa (-9.776514722755945, -12.434205799638786)
+Lisa (10.737594575550457, -10.055261586623141)
 亞當 found food!
-亞當 (-10.720999955740027, 2.7525456162189528)
-[2] 亞當 is dead due to hypothermia, in snow-mountain!
-亞當 died at age 0.00 years old.
+亞當: I don't want to 8wy7o6nkT
+亞當: I don't want to 8wy7o6nkT
+亞當: I want to 8wy7o6nkT
+亞當: I want to go to pos(0.045952146867036234,1.4722090217084454)
+亞當: I don't want to feel warm
+亞當: I want to store fat
+亞當: I don't want to eat food
+亞當 (3.7097125227881858, 8.217597071993955)
 夏娃 found food!
-夏娃 (-12.95808471046015, -11.360554155819628)
+夏娃 (0, 13.09562387715095)
 David found food!
-David (10.675384509252199, -0.06956502879125281)
+David: I don't want to 6rarrnU
+David: I don't want to 6rarrnU
+David: I want to 6rarrnU
+David: I want to go to pos(0,0)
+David: I don't want to feel warm
+David: I want to store fat
+David: I don't want to eat food
+David (-0.47044361240001287, 5.577987683342087)
 Paul found food!
-Paul (-6.049914774494278, -6.9301004095174115)
+Paul (-8.5583508511229, -7.613001012764801)
 John found food!
-John (2.0268034197485942, 11.644621345165685)
+John (8.523029219686151, -1.9524318017647069)
 James found food!
-James (-5.892340572897018, -1.9549065811244937)
+James (-9.911888280367137, -12.179354582440553)
 Sarah found food!
-Sarah (-10.073843319950004, -5.677631137579297)
-[2] Sarah is dead due to hypothermia, in snow-mountain!
-Sarah died at age 0.00 years old.
+Sarah (6.545018767330003, -8.852556788930357)
 Emma found food!
-Emma (2.9629426822770775, 4.031934268631229)
-[2] Emma is dead due to hypothermia, in snow-mountain!
+Emma (5.746762059492049, 3.1240091472877722)
+[2] Emma is dead due to hypothermia, in snowland!
 Emma died at age 0.00 years old.
 Laura found food!
-Laura (-8.771174925035073, 3.595358614591156)
-[2] Laura is dead due to hypothermia, in snow-mountain!
+Laura (7.446736290833153, -7.459305271118218)
+[2] Laura is dead due to hypothermia, in snowland!
 Laura died at age 0.00 years old.
 Lisa found food!
-Lisa (-5.886805161043725, -0.9064221688709537)
-夏娃 found food!
-夏娃 (-10.234257280214274, -1.5623895463523034)
+Lisa (-11.70940163757456, -2.147166766948807)
+亞當 found food!
+亞當: I don't want to 8wy7o6nkT
+亞當: I don't want to go to pos(0.045952146867036234,1.4722090217084454)
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當: I don't want to eat food
+亞當: I don't want to go to pos(18.502802216615002,13.795584755336042)
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當 (-10.688800291429136, 11.900148850813633)
+夏娃 (-9.883417557732823, 2.9216642187569644)
 David found food!
-David (2.7543607009658615, -10.472830359300328)
-[3] David is dead due to hypothermia, in snow-mountain!
-David died at age 0.00 years old.
+David: I don't want to 6rarrnU
+David: I don't want to go to pos(0,0)
+David: I want to feel warm
+David: I don't want to store fat
+David: I want to eat food
+David: I don't want to eat food
+David: I don't want to go to pos(14.793089693826817,5.577987683342087)
+David: I want to feel warm
+David: I don't want to store fat
+David: I want to eat food
+David (2.0240837261722433, 13.093814271879713)
 Paul found food!
-Paul (0.504545538021361, -3.18648716179662)
-[3] Paul is dead due to hypothermia, in snow-mountain!
+Paul (-13.312959291740015, -10.792694953549104)
+[3] Paul is dead due to hypothermia, in river!
 Paul died at age 0.00 years old.
 John found food!
-John (-3.635061132857551, 1.9708111159096084)
-James (5.68486688710702, 3.2161915812322555)
-[3] James is dead due to hypothermia, in snow-mountain!
-James died at age 0.00 years old.
-Lisa found food!
-Lisa (1.6575182395426893, 9.415165379203188)
-[3] Lisa is dead due to hypothermia, in snow-mountain!
-Lisa died at age 0.00 years old.
-夏娃 found food!
-夏娃 (5.3986570561442235, -11.571552817452986)
-John found food!
-John (10.037364034802135, 5.005520725667068)
-[4] John is dead due to hypothermia, in snow-mountain!
+John (-10.048137009863446, 6.850829839265728)
+[3] John is dead due to hypothermia, in mountain!
 John died at age 0.00 years old.
-夏娃 (-5.669984578810261, -1.7282453272304679)
-夏娃 (6.701922072856938, -3.551121091509124)
-夏娃 (-9.586496614565974, -0.7728005418365953)
-[7] 夏娃 is dead due to hypothermia, in river!
+James (-8.162429724941262, -6.239313567209969)
+Sarah (-6.937119653242583, 5.231914648961876)
+[3] Sarah is dead due to hypothermia, in mountain!
+Sarah died at age 0.00 years old.
+Lisa (-12.040705999136605, 3.9894699954774744)
+[3] Lisa is dead due to hypothermia, in mountain!
+Lisa died at age 0.00 years old.
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當: I don't want to eat food
+亞當: I don't want to go to pos(18.502802216615002,13.795584755336042)
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當: I don't want to go to pos(18.502802216615002,13.795584755336042)
+亞當: I don't want to go to pos(17.18162773795007,37.07980707667967)
+亞當 (6.021586083691318, -10.7819287844578)
+夏娃 found food!
+夏娃 (-7.044321169333809, -4.98785966772013)
+[4] 夏娃 is dead due to hypothermia, in grassland!
 夏娃 died at age 0.00 years old.
-All lifes are dead in 7 ticks!
+David: I want to feel warm
+David: I don't want to store fat
+David: I want to eat food
+David: I don't want to eat food
+David: I don't want to go to pos(14.793089693826817,5.577987683342087)
+David: I want to feel warm
+David: I don't want to store fat
+David: I want to eat food
+David: I don't want to go to pos(14.793089693826817,5.577987683342087)
+David: I don't want to go to pos(27.870428029379205,25.17965822586604)
+David (8.686751327331727, 3.045115988394919)
+[4] David is dead due to hypothermia, in highland!
+David died at age 0.00 years old.
+James (-7.386387389953747, -1.8202229275010602)
+亞當: I want to eat food
+亞當: I don't want to eat food
+亞當: I don't want to go to pos(18.502802216615002,13.795584755336042)
+亞當: I want to feel warm
+亞當: I don't want to store fat
+亞當: I want to eat food
+亞當: I don't want to go to pos(18.502802216615002,13.795584755336042)
+亞當: I don't want to go to pos(17.18162773795007,37.07980707667967)
+亞當: I want to go to pos(17.18162773795007,37.07980707667967)
+亞當: I want to go to pos(76.34769598213087,13.04563799104032)
+亞當 (2.3209995531886847, 8.878086608671186)
+[5] 亞當 is dead due to hypothermia, in mountain!
+亞當 died at age 0.00 years old.
+James (12.278009346509648, 10.369968683255205)
+[5] James is dead due to hypothermia, in mountain!
+James died at age 0.00 years old.
+All lifes are dead in 5 ticks!

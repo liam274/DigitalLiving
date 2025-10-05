@@ -672,7 +672,8 @@ class life:
         if not self.in_sleep and self.energy<20:
             if self.storage_fat<80-self.nutrition:
                 self.in_sleep=random.random()<.1
-                _print(self.name,f"is slept in starving!",file=LOGFILE)
+                if self.in_sleep:
+                    _print(self.name,f"is slept in starving!",file=LOGFILE)
             else:
                 self.in_sleep=True
             if self.in_sleep:

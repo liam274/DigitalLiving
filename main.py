@@ -13,13 +13,15 @@ from dataclasses import dataclass,field
 from typing import Generic,TypeVar,Optional,Any,Generator,TextIO,Callable,Union
 from collections import deque,Counter
 import string
-import numpy as np
 import tkinter as tk
 import os
 import sys
-from names_dataset import NameDataset # type: ignore
 import weakref
 from array import array
+import datetime
+import numpy as np
+from names_dataset import NameDataset # type: ignore
+import types
 
 # constants
 POSITIVE_FEELINGS: tuple[str,...]=("happy","surprised","trusting","joyful",
@@ -72,15 +74,15 @@ def shuffle(l: list[Any],repeat_weight: dict[Any,float]={})->list[Any]:
         candidates=list(counter.keys())
         if last is not None and last in candidates:
             weight=repeat_weight.get(last,0.5)
-            if random.random() < weight:
+            if random.random()<weight:
                 # bigger, easier to repeat
                 candidates=[c for c in candidates if c != last]
         if not candidates:
             candidates=list(counter.keys())
         choice=random.choice(candidates)
         r.append(choice)
-        counter[choice] -= 1
-        if counter[choice] <= 0:
+        counter[choice]-=1
+        if counter[choice]<=0:
             del counter[choice]
         last=choice
     return r
@@ -111,16 +113,25 @@ def mixture(a: dict[str,dict[str,float]],b: dict[str,dict[str,float]])->dict[str
             temp[nam]=val*u+b[name][nam]*(1-u)
         result.update({name:temp})
     return result
-def _print(*content: Any,sep: str=" ",end: str="\n",file: TextIO=sys.stdout)->None:
+def _print(*content: Any,sep: str=" ",end: str="\n",file: TextIO=sys.stdout):
     """Print that auto-flushes"""
     print(*content,sep=sep,end=end,file=file)
     file.flush()
 def sort_chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
+    """sort it and chose it"""
     l=[i for i in l if i is not t]
     l.sort(key=lambda a:a.position_.distance(t.position_))
     return tuple(i for i in l[:count])
 def between(a: float,upper: float,lower: float):
+    """check if is between"""
     return upper>a>lower
+def format_duration(seconds: int)->str:
+    """format the tick and output as date"""
+    delta=datetime.timedelta(seconds=seconds)
+    days=delta.days
+    hours,remainder=divmod(delta.seconds,3600)
+    minutes,seconds=divmod(remainder,60)
+    return f"{days} days {hours:02}:{minutes:02}:{seconds:02}"
 # classes
 
 ## data
@@ -156,17 +167,22 @@ class position:
         self.name=name
     @property
     def x(self)->float:
+        """return x"""
         return self.data[0]
     @x.setter
     def x(self,value: float):
+        """set x"""
         self.data[0]=value
     @property
     def y(self)->float:
+        """return y"""
         return self.data[1]
     @y.setter
     def y(self,value: float):
+        """set y"""
         self.data[1]=value
     def distance(self,other: "position")->float:
+        """return euclidean distance"""
         return float(np.linalg.norm(np.array(self.data)-np.array(other.data)))
 @dataclass(slots=True)
 class emotion_stat:
@@ -187,7 +203,8 @@ class event:
     feeling: dict[str,emotion_stat]=field(default_factory=dict[str,emotion_stat])
     what2do: list[tuple[Callable[...,Any],
         list[tuple[Callable[...,Any],tuple[Any,...]]]]]=field(
-            default_factory=list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
+            default_factory=list[tuple[Callable[...,Any],
+            list[tuple[Callable[...,Any],tuple[Any,...]]]]]
         )
     # list[
     #   tuple[
@@ -215,7 +232,8 @@ class biome:
     def __hash__(self):
         """hash for dictonary"""
         return hash((self.name,self.temperature,
-                     self.diural_tempature_difference,self.water_required
+                     self.diural_tempature_difference,
+                     self.water_required
                     ))
 BIOMES: tuple[biome,...]=(
     biome("sea",20,-10,30),biome("river",19,-6,20),
@@ -259,12 +277,15 @@ class memory:
         self.recent_event.enqueue(e)
         self.data[e.name]=e
     def remember(self,name: str,t: int,venue: position,
-            feelings: dict[str,emotion_stat],float_index: float)->None:
+            feelings: dict[str,emotion_stat],float_index: float,
+            what2do: list[tuple[Callable[...,Any],
+            list[tuple[Callable[...,Any],tuple[Any,...]]]]]=[])->None:
         """different from remember_e,this function builds the event obj for you"""
         e: event=event(name,t,venue,
                        {i:emotion_stat(i,
                         feelings[i].value/(random.uniform(.001,.2)*float_index))
                          for i in FEELINGS} # noise factors
+                         ,what2do
                        )
         self.data[name]=e
         self.recent_event.enqueue(e)
@@ -354,13 +375,15 @@ class unconscious_mind:
                     continue
                 value: float=emotion.value
                 if name in POSITIVE_FEELINGS:
-                    self.feeling[name].value=(value-self.feeling[name].value)*positivity*( # more time no this emotion more this,same below
+                    self.feeling[name].value=(value-self.feeling[name].value)*positivity*(
+                        # more time no this emotion more this,same below
                         (self.history_feeling_tick[name]*10)/patience
                         # ten as the factor to low down personalities.patience
                         )
                     _sum+=self.feeling[name].value
                 else:
-                    self.feeling[name].value+=(value-self.feeling[name].value)*negativity*((self.history_feeling_tick[name]*10)/patience)
+                    self.feeling[name].value+=(value-self.feeling[name].value)*\
+                        negativity*((self.history_feeling_tick[name]*10)/patience)
                     _sum-=self.feeling[name].value
             if abs(_sum)>attention_span:
                 # not matter it's too positive or too negative
@@ -383,6 +406,7 @@ class unconscious_mind:
         self.thoughts.enqueue(thought)
         return (want,noticed)
     def most_want2do(self)->event:
+        """return the most want to do event"""
         result: list[Union[str,float]]=["",sys.float_info.min]
         positivity: float=self.personality["positivity"].value
         negativity: float=self.personality["negativity"].value
@@ -391,9 +415,11 @@ class unconscious_mind:
             _sum: float=0
             for nam,emo in _event.feeling.items():
                 if nam in POSITIVE_FEELINGS:
-                    _sum+=(emo.value-self.feeling[nam].value)*positivity*(self.history_feeling_tick[nam]/(patience*.1))
+                    _sum+=(emo.value-self.feeling[nam].value)*positivity\
+                        *(self.history_feeling_tick[nam]/(patience*.1))
                 else:
-                    _sum-=(emo.value-self.feeling[nam].value)*negativity*(self.history_feeling_tick[nam]/(patience*.1))
+                    _sum-=(emo.value-self.feeling[nam].value)*negativity\
+                        *(self.history_feeling_tick[nam]/(patience*.1))
             if abs(_sum)>abs(result[1]): # type: ignore
                 result[1]=_sum
                 result[0]=name
@@ -432,7 +458,8 @@ class life:
               "storage_fat","weight","extra_weight",
               "fat_index","dead_reason","water_content",
               "gene","current_biome","hug2heat","stomach",
-              "stomach_max","unconscious")
+              "stomach_max","unconscious","frequent",
+              "freq_met","friends")
     def __init__(self,name: str,age: float,
                  personality: dict[str,personalities],pos: position):
         self.mind_: mind=mind(age,personality)
@@ -459,7 +486,12 @@ class life:
         self.stomach: float=0
         self.stomach_max: float=100
         self.unconscious: unconscious_mind=unconscious_mind(personality)
+        self.frequent: dict[str,tuple[float,dict[str,event]]]={}
+        self.freq_met: dict["life",int]={}
+        self.friends: weakref.WeakSet[life]=weakref.WeakSet()
         # of certain events. Omit teaching
+    def __hash__(self)->int:
+        return hash(self.name)
     def unconscious_thinking(self,thought: dict[str,event])->tuple[bool,bool]:
         """Think about something"""
         return self.unconscious.think(thought)
@@ -484,6 +516,7 @@ class life:
             self.mind_.feeling,
             self.personality["calmness"].value
             ) # memorize the new friend
+        self.friends.add(obj)
     def grow(self,tick: int):
         """grow in body"""
         # simply add the self tick,which does not matters to the emotion,but body
@@ -532,7 +565,9 @@ class life:
         return False
     def _del__(self):
         """run when deleted(dead)"""
-        _print(f"[{WORLD.time()}]",self.name,f"is dead due to {self.dead_reason}, in {self.current_biome.name}!",file=LOGFILE)
+        _print(f"[{WORLD.time()}]",self.name,
+        f"is dead due to {self.dead_reason}, in {self.current_biome.name}!",
+        file=LOGFILE)
     def get_current_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position_.y/BIOME_SIZE)][int(self.position_.x/BIOME_SIZE)]
@@ -552,16 +587,51 @@ class life:
     def sweat(self):
         """sweat to cooldown"""
         # According to Penman equation
-        total_heat_load: float=.1*(self.current_biome.temperature-self.body_temp)+1898.925*(self.body_temp-37)
+        total_heat_load: float=.1*(self.current_biome.temperature-\
+            self.body_temp)+1898.925*(self.body_temp-37)
         sweat_cooling: float=total_heat_load*min(1,(self.body_temp-37)*.3)*.01
         self.body_temp-=sweat_cooling
-        self.water_content=(self.get_weight()*self.water_content-sweat_cooling*.8)/self.get_weight()
+        self.water_content=(self.get_weight()*\
+            self.water_content-sweat_cooling*.8)/self.get_weight()
         self.energy-=sweat_cooling*.01
-    def move(self,_pos: Optional[position]=None,dx: Optional[float]=None,dy: Optional[float]=None)->Callable[...,Any]:
+    def get_stomach(self):
+        return self.stomach
+    def gift(self,dm: float,from_whom: "life"):
+        """recieve gift, be thankful"""
+        self.stomach+=dm
+        self.unconscious_thinking({f"a gift from {from_whom.name}":
+            event(f"a gift from {from_whom.name}",WORLD.time(),
+            self.position_,self.change_feeling(.5/self.personality["calmness"].value),
+            [(self.gift,[(min,(10,self.get_stomach))])])
+            })
+    def meet(self,another: tuple["life"]):
+        """met somebody, chose to be friend or whatever"""
+        result: tuple[bool,bool]
+        for i in another:
+            if i in self.friends:
+                result=self.unconscious_thinking({f"share resource to {i.name}":
+                    event(f"share resource to {i.name}",WORLD.time(),self.position_,
+                    self.change_feeling(.1))
+                })
+                if all(result):
+                    dm: float=max(5,self.stomach)
+                    self.stomach-=dm
+                    i.gift(dm,self)
+            self.freq_met[i]=self.freq_met.get(i,0)+1
+            result=self.unconscious_thinking({f"meet {i.name}":event(
+                f"meet {i.name}",WORLD.time(),self.position_,
+                self.change_feeling(.1)
+                )})
+            if self.freq_met[i]>self.personality["attention_span"].value*6 and result[1]:
+                self.friend(i)
+    def move(self,_pos: Optional[position]=None,
+             dx: Optional[float]=None,
+             dy: Optional[float]=None)->Callable[...,Any]:
         """move to somewhere"""
-        # This should consider the event in this position, and 
+        # This should consider the event in this position, and
         # change the idea.
-        factor: float=self.personality["calmness"].value*20*self.personality["shyness"].value
+        factor: float=self.personality["calmness"].value\
+            *20*self.personality["shyness"].value
         if _pos:
             dx=_pos.x-self.position_.x
             dy=_pos.y-self.position_.y
@@ -580,7 +650,8 @@ class life:
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
         """+ \\+ for positive feeling, - for negative feeling"""
         result: dict[str,emotion_stat]={
-            i:emotion_stat(i,emo.value+(n*(-1)**(int(i in POSITIVE_FEELINGS)+1))/self.personality["calmness"].value)
+            i:emotion_stat(i,emo.value+(n*(-1)**(int(i
+                in POSITIVE_FEELINGS)+1))/self.personality["calmness"].value)
             for i,emo in self.unconscious.feeling.items()
         }
         for i,_ in result.copy().items():
@@ -588,7 +659,8 @@ class life:
                 result[i].value+=specific[i]
         return result
     def dream(self):
-        pass
+        """Have a dream"""
+        # should have a dream here
     def sleep(self):
         """sleep to recover energy, but lose nutrition"""
         self.energy=min(100,self.energy+.005)
@@ -669,11 +741,11 @@ class life:
             self.is_alive=False
             self.dead_reason="starving"
             return
-        if not self.in_sleep and self.energy<20:
+        if not self.in_sleep and self.energy<40:
             if self.storage_fat<80-self.nutrition:
                 self.in_sleep=random.random()<.1
                 if self.in_sleep:
-                    _print(self.name,f"is slept in starving!",file=LOGFILE)
+                    _print(self.name,"is slept in starving!",file=LOGFILE)
             else:
                 self.in_sleep=True
             if self.in_sleep:
@@ -729,9 +801,10 @@ class life:
                     break
             else:
                 choosen: str=random.choice(result)
-                # later, I shell change it to sorting it of the simularity from concepts, and find out the most positive one
-                # Because of loness, feeling will drops
+                # later, I shell change it to sorting it of the simularity
+                # from concepts, and find out the most positive one.
                 self.unconscious.feeling=self.change_feeling(-.6/calmness)
+                # Because of loness, feeling will drops
                 self.unconscious_thinking({choosen:event(choosen,WORLD.time(),
                             self.position_,self.unconscious.feeling)
                         })
@@ -740,8 +813,11 @@ class life:
         negativity: float=self.personality["negativity"].value
         if self.is_starving():
             self.unconscious_thinking({
-                "be starving":event("be starving",WORLD.time(),self.position_,self.change_feeling(0,{"stressed":negativity/(calmness*2)})),
-                "find food":event("find food",WORLD.time(),self.position_,self.change_feeling(0,{"hopeful":.5/calmness}))
+                "be starving":event("be starving",WORLD.time(),
+                self.position_,self.change_feeling(0,
+                    {"stressed":negativity/(calmness*2)})),
+                "find food":event("find food",WORLD.time(),
+                    self.position_,self.change_feeling(0,{"hopeful":.5/calmness}))
                 }
             )
         for i in tuple(self.unconscious.thoughts):
@@ -749,7 +825,8 @@ class life:
             noticed: bool
             want,noticed=self.unconscious_thinking(i)
             if noticed:
-                _print(self.name+":","I"+" don't"*int(not want)+" want to",tuple(i.keys())[0],file=LOGFILE)
+                _print(self.name+":","I"+" don't"*int(not want)\
+                    +" want to",tuple(i.keys())[0],file=LOGFILE)
         # defines the var type here,yet var1: type,var2: type is not supported
         name: str
         e: event
@@ -757,9 +834,15 @@ class life:
         const1: float=1/positivity
         const2: float=-1/negativity
         if all(self.unconscious_thinking({name:e})):
+            l: list[Union[float,dict[str,event]]]=\
+                list(self.frequent.get(name,(0,self.unconscious.concepts[name])))
+            l[0]+=1 # type: ignore
+            self.frequent[name]=tuple(l) # type: ignore
+            del l
             for i in tuple(self.unconscious.thoughts.data[0].values())[0].what2do:
                 # list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
-                i[0](*(func(*arg) for func,arg in i[1]))
+                i[0](*(func(*((n() if isinstance(n,types.FunctionType)
+                    else n) for n in arg)) for func,arg in i[1]))
                 _print("Doing",tuple(self.unconscious.thoughts.data[0].values())[0].name)
             for t,(_name,emotion) in enumerate(e.feeling.items()):
                 # loop through the feeling and change it if it's remembered
@@ -776,14 +859,15 @@ class life:
                 self.unconscious.concepts.update({m:{m:e}})
                 self.communicate([m])
         if self.water_content<60:
-            self.unconscious_thinking({"be thirsty":event("be thirsty",WORLD.time(),self.position_,
-                        self.change_feeling(-.4)
+            self.unconscious_thinking({"be thirsty":event("be thirsty",
+                        WORLD.time(),self.position_,self.change_feeling(-.4)
                         )}
                     )
         # heat perform system
         self.unconscious_thinking({
             f"go to pos({self.position_.x},{self.position_.y})":
-            event(f"go to pos({self.position_.x},{self.position_.y})",WORLD.time(),self.position_,self.unconscious.feeling)
+            event(f"go to pos({self.position_.x},{self.position_.y})",
+                WORLD.time(),self.position_,self.unconscious.feeling)
         })
         most: event=self.most_want2do()
         dx: float
@@ -795,7 +879,8 @@ class life:
             c=self.move()
         dx,dy=c()
         dt: float=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(4e6)+\
-            (self.current_biome.temperature-self.body_temp)/((self.fat_index or 1)*2e5*len(self.hug2heat))
+            (self.current_biome.temperature-self.body_temp)/\
+                ((self.fat_index or 1)*2e5*len(self.hug2heat))
         self.body_temp+=dt
         if self.body_temp>38:
             cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
@@ -870,7 +955,7 @@ class life:
         _print(self.name,"and",another.name,"made a baby:",baby.name,file=LOGFILE)
         return baby
 class human(life):
-    pass
+    """human, subclass of life"""
 
 ## environment
 @dataclass(slots=True)
@@ -881,6 +966,7 @@ class weather:
     wind_speed: float
     wind_direction: float
     def update(self):
+        """update the weather"""
         pass
 @dataclass(slots=True)
 class dobj:
@@ -888,6 +974,7 @@ class dobj:
     name: str
     pos: position
     def update(self):
+        """update the object, usually useless"""
         pass
 class environment:
     """define the environment"""
@@ -900,12 +987,14 @@ class environment:
         self.size: int=width*height
         self.biomes: list[biome]=[]
         self.water_content: float=water_content
-        self.water: float=water_content*self.size*10 # water content*area*10 as the factor
+        # water content*area*10 as the factor
+        self.water: float=water_content*self.size*10
         self.tick: int=0
         self.obj: list[dobj]=obj
         self.lifes: list[life]=lifes
         self.map: list[list[biome]]=[]
     def init(self):
+        """initalize the environment"""
         self.generate_map()
     def time(self)->int:
         """return time in ticks"""
@@ -926,8 +1015,9 @@ class environment:
                 for _ in range(int(max(i.water_required/10,1))):
                     if random.random()<self.water_content/10**math.log10(self.water_content):
                         self.obj.append(dobj("food",
-                                        position(x+random.uniform(0,BIOME_SIZE),y+random.uniform(0,BIOME_SIZE),"food")
-                                        )
+                                position(x+random.uniform(0,BIOME_SIZE),y+\
+                                    random.uniform(0,BIOME_SIZE),"food")
+                            )
                         )
         _print(len(self.obj))
         """
@@ -937,19 +1027,22 @@ class environment:
         frame.pack(padx=10,pady=10)
         x_size: int=len(self.map)
         y_size: int=len(self.map[0])
-        canvas: tk.Canvas=tk.Canvas(root, width=x_size*BIOME_SIZE+60, height=y_size*BIOME_SIZE+60, bg="white")
+        canvas: tk.Canvas=tk.Canvas(root,width=x_size*BIOME_SIZE+60,
+            height=y_size*BIOME_SIZE+60,bg="white")
         canvas.pack(padx=10, pady=10)
         for col_idx in range(len(self.map[0])):
-            canvas.create_text((col_idx+.5)*BIOME_SIZE+45, y_size*BIOME_SIZE+30, text=str(col_idx), font=("Arial", 10, "bold"))
+            canvas.create_text((col_idx+.5)*BIOME_SIZE+45,y_size*BIOME_SIZE+30,
+                text=str(col_idx),font=("Arial",10,"bold"))
         for row_idx,row in enumerate(self.map):
-            canvas.create_text(30, (y_size-row_idx-2)*BIOME_SIZE+45, text=str(row_idx), font=("Arial", 10, "bold"))
+            canvas.create_text(30,(y_size-row_idx-2)*BIOME_SIZE+45,
+                text=str(row_idx),font=("Arial",10,"bold"))
             for col_idx,cell in enumerate(row):
                 color: str=COLOR_MAP.get(cell.name,"#000000")
                 x1: float=col_idx*BIOME_SIZE+45
                 y1: float=row_idx*BIOME_SIZE+15
                 x2: float=x1+BIOME_SIZE
                 y2: float=y1+BIOME_SIZE
-                canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
+                canvas.create_rectangle(x1,y1,x2,y2,fill=color,outline="black")
         root.mainloop()
         # """;tk.ACTIVE
     def append_life(self,*l: life):
@@ -964,7 +1057,8 @@ class environment:
             for t2 in range(len(i)):
                 if random.random()<.3:
                     voices.update({
-                        position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),""):
+                        position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
+                            t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),""):
                         random_string()
                     })
         # """
@@ -1000,7 +1094,8 @@ WORLD: environment=environment(20,20,2/3,[],[])
 WORLD.init()
 adam=human("亞當",0,personality,adam_home)
 eve=human("夏娃",0,personality,position(5,5,"eve's"))
-nd: dict[str,list[str]]=NameDataset().get_top_names(4,use_first_names=True,country_alpha2="GB")["GB"] # type: ignore
+nd: dict[str,list[str]]=NameDataset().get_top_names(4, # type: ignore
+    use_first_names=True,country_alpha2="GB")["GB"]
 humans: list[human]=[adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"])]
 WORLD.append_life(adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"]))
 FPS: int=6000
@@ -1009,6 +1104,7 @@ t: float=time.monotonic()
 while 1:
     if not WORLD.lifes:
         _print(f"All lifes are dead in {WORLD.tick} ticks!",file=LOGFILE)
+        _print(f"All lifes are dead in {format_duration(WORLD.tick)}!")
         break
     if WORLD.tick&255==0 and WORLD.tick>0:
         LOGFILE.close()
@@ -1023,4 +1119,5 @@ else:
 LOGFILE.close()
 _print("Closed!")
 for i in humans:
-    _print(i.name,tuple(i.name for i in sort_chose(humans,i,len(humans))))
+    _print(i.name,tuple(i.name for i in
+        sort_chose(humans,i,len(humans))))

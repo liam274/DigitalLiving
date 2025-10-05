@@ -850,7 +850,7 @@ class life:
                 # list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
                 i[0](*(func(*((n() if isinstance(n,types.FunctionType)
                     else n) for n in arg)) for func,arg in i[1]))
-                _print("Doing",tuple(self.unconscious.thoughts.data[0].values())[0].name)
+                _print("Doing",tuple(self.unconscious.thoughts.data[0].values())[0].name,file=LOGFILE)
             for t,(_name,emotion) in enumerate(e.feeling.items()):
                 # loop through the feeling and change it if it's remembered
                 self.unconscious.history_feeling_tick[_name]+=1
@@ -1120,16 +1120,17 @@ while 1:
         _print(f"All lifes are dead in {WORLD.tick} ticks!",file=LOGFILE)
         _print(f"All lifes are dead in {format_duration(WORLD.tick)}!")
         break
-    if WORLD.tick&255==0 and WORLD.tick>0:
-        LOGFILE.close()
-        LOGFILE=open("log.txt","a+",encoding="utf-8") # type: ignore
     if WORLD.tick&4095==0 and WORLD.tick>0:
         _print("4096 tick passed!")
+        LOGFILE.close()
+        LOGFILE=open("log.txt","a+",encoding="utf-8") # type: ignore
     WORLD.mainloop()
     # time.sleep(interval-((time.monotonic()-t)%interval))
 else:
     pass # I don't know why I need this,
          # but it keeps the bug away
+delta: float=time.time()-start
 LOGFILE.close()
 _print("Closed!")
-_print("Consumed",time.time()-start,"second.")
+_print("Consumed",delta,"second.")
+_print(f"{WORLD.tick/delta:.2f} FPS")

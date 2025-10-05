@@ -18,6 +18,8 @@ import tkinter as tk
 import os
 import sys
 from names_dataset import NameDataset # type: ignore
+import weakref
+from array import array
 
 # constants
 POSITIVE_FEELINGS: tuple[str,...]=("happy","surprised","trusting","joyful",
@@ -146,24 +148,26 @@ class queue(Generic[T]):
         yield from self.data
 
 ## low-level classes
-@dataclass(slots=True)
 class position:
     """state 2d position"""
-    x: float
-    y: float
-    name: str
+    __slots__=("data","name")
+    def __init__(self,x: float,y: float,name: str):
+        self.data=array("d",[x,y])
+        self.name=name
+    @property
+    def x(self)->float:
+        return self.data[0]
+    @x.setter
+    def x(self,value: float):
+        self.data[0]=value
+    @property
+    def y(self)->float:
+        return self.data[1]
+    @y.setter
+    def y(self,value: float):
+        self.data[1]=value
     def distance(self,other: "position")->float:
-        """return the Euclidean distance"""
-        return float(np.linalg.norm(np.array([self.x,self.y])-np.array([other.x,other.y])))
-    def __str__(self):
-        """stringify"""
-        return f"({self.x:.2f},{self.y:.2f})"
-    def __eq__(self,other: Any):
-        """check if equal"""
-        return isinstance(other,position) and self.x == other.x and self.y == other.y
-    def __hash__(self):
-        """hash for dictonary"""
-        return hash((self.x,self.y))
+        return float(np.linalg.norm(np.array(self.data)-np.array(other.data)))
 @dataclass(slots=True)
 class emotion_stat:
     """state emotion"""
@@ -451,7 +455,7 @@ class life:
         self.water_content: float=85 # in percentage
         self.gene: dict[str,dict[str,float]]={"event_requirement":{}} # This forms the reaction
         self.current_biome: biome=self.get_current_biome()
-        self.hug2heat: set[life]={self}
+        self.hug2heat: weakref.WeakSet[life]=weakref.WeakSet([self])
         self.stomach: float=0
         self.stomach_max: float=100
         self.unconscious: unconscious_mind=unconscious_mind(personality)
@@ -789,8 +793,8 @@ class life:
         else:
             c=self.move()
         dx,dy=c()
-        dt: float=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(400)+\
-            (self.current_biome.temperature-self.body_temp)/((self.fat_index or 1)*20*len(self.hug2heat))
+        dt: float=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(4e6)+\
+            (self.current_biome.temperature-self.body_temp)/((self.fat_index or 1)*2e5*len(self.hug2heat))
         self.body_temp+=dt
         if self.body_temp>38:
             cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))

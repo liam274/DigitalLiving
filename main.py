@@ -45,10 +45,10 @@ PRINTABLE: str=string.ascii_lowercase+string.ascii_uppercase+string.digits+" "
 
 WEATHERS: tuple[str,...]=("sunny","cloudy","rainy","stormy","snowy","foggy")
 
-if os.path.exists("log.txt"):
-    with open("log.txt","w",encoding="utf-8") as file:
+if os.path.exists("output.txt"):
+    with open("output.txt","w",encoding="utf-8") as file:
         file.write("") # clear the file
-LOGFILE: TextIO=open("log.txt","a",encoding="utf-8")
+OUTPUT_FILE: TextIO=open("output.txt","a",encoding="utf-8")
 
 # funcs
 
@@ -559,7 +559,7 @@ class life:
         global voices
         for i in message:
             voices[(self,self.position_)]=i
-            _print(self.name+":",i,file=LOGFILE)
+            _print(self.name+":",i,file=OUTPUT_FILE)
     def percieve_event(self,e: event)->None:
         """see an event and act la"""
         if self.unconscious_thinking({e.name:e})[1]:
@@ -574,7 +574,7 @@ class life:
         """run when deleted(dead)"""
         _print(f"[{WORLD.time()}]",self.name,
         f"is dead due to {self.dead_reason}, in {self.current_biome.name}!",
-        file=LOGFILE)
+        file=OUTPUT_FILE)
     def get_current_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position_.y/BIOME_SIZE)][int(self.position_.x/BIOME_SIZE)]
@@ -652,7 +652,6 @@ class life:
         self.current_biome=self.get_current_biome()
         def pos()->tuple[float,float]:
             return (ox-self.position_.x,oy-self.position_.y)
-        _print(self.name,pos(),file=LOGFILE)
         return pos
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
         """+ \\+ for positive feeling, - for negative feeling"""
@@ -670,8 +669,8 @@ class life:
         # should have a dream here
     def sleep(self):
         """sleep to recover energy, but lose nutrition"""
-        self.energy=min(100,self.energy+6.9e-06)
-        self.nutrition=max(0,self.nutrition-2.7e-06)
+        self.energy=min(100,self.energy+0.001388888888888889)
+        self.nutrition=max(0,self.nutrition-0.000462962962962963)
     def is_starving(self)->bool:
         """check if starving"""
         return self.nutrition<20
@@ -725,9 +724,11 @@ class life:
             "hug to gain heat",WORLD.time(),self.position_,
             self.change_feeling(.7)
         )})
-        _print(", ".join(i.name for i in self.hug2heat),"hug to gain heat!",file=LOGFILE)
+        _print(", ".join(i.name for i in self.hug2heat),"hug to gain heat!",file=OUTPUT_FILE)
     def update(self):
         """update the mainloop"""
+        if not self.is_alive:
+            return
         # grow
         self.mind_.grow(1)
         self.grow(1)
@@ -752,22 +753,22 @@ class life:
             if self.storage_fat<80-self.nutrition:
                 self.in_sleep=random.random()<.1
                 if self.in_sleep:
-                    _print(self.name,"is slept in starving!",file=LOGFILE)
+                    _print(self.name,"is slept in starving!",file=OUTPUT_FILE)
             else:
                 self.in_sleep=True
             if self.in_sleep:
-                _print(self.name,f"is in sleep at tick {WORLD.time()}!",file=LOGFILE)
+                _print(self.name,f"is in sleep at tick {WORLD.time()}!",file=OUTPUT_FILE)
         if self.in_sleep:
             self.sleep()
             self.dream()
             if self.energy>=80:
                 self.in_sleep=False
-                _print(self.name,f"woke up just at tick {WORLD.time()}!",file=LOGFILE)
+                _print(self.name,f"woke up just at tick {WORLD.time()}!",file=OUTPUT_FILE)
             else:
                 self.hydrolysis(80-self.nutrition)
             return
         if self.touch_food():
-            _print(self.name,"found food!",file=LOGFILE)
+            _print(self.name,"found food!",file=OUTPUT_FILE)
             self.nutrition+=20
             self.water_content+=5
             self.store_fat()
@@ -800,7 +801,7 @@ class life:
             result: list[str]=self.listen()
             if not result:
                 self.unconscious.feeling=self.change_feeling(-.7/positivity)
-                _print(self.name+": I feel so lonely...",file=LOGFILE)
+                _print(self.name+": I feel so lonely...",file=OUTPUT_FILE)
                 return
             for i in result:
                 if i in self.unconscious.concepts:
@@ -816,7 +817,7 @@ class life:
                             self.position_,self.unconscious.feeling)
                         })
             self.move() # move makes memory and feelings
-            _print(self.name,"memory initialization...",file=LOGFILE)
+            _print(self.name,"memory initialization...",file=OUTPUT_FILE)
         negativity: float=self.personality["negativity"].value
         if self.is_starving():
             self.unconscious_thinking({
@@ -833,7 +834,7 @@ class life:
             want,noticed=self.unconscious_thinking(i)
             if noticed:
                 _print(self.name+":","I"+" don't"*int(not want)\
-                    +" want to",tuple(i.keys())[0],file=LOGFILE)
+                    +" want to",tuple(i.keys())[0],file=OUTPUT_FILE)
         # defines the var type here,yet var1: type,var2: type is not supported
         name: str
         e: event
@@ -850,7 +851,7 @@ class life:
                 # list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
                 i[0](*(func(*((n() if isinstance(n,types.FunctionType)
                     else n) for n in arg)) for func,arg in i[1]))
-                _print("Doing",tuple(self.unconscious.thoughts.data[0].values())[0].name,file=LOGFILE)
+                _print("Doing",tuple(self.unconscious.thoughts.data[0].values())[0].name,file=OUTPUT_FILE)
             for t,(_name,emotion) in enumerate(e.feeling.items()):
                 # loop through the feeling and change it if it's remembered
                 self.unconscious.history_feeling_tick[_name]+=1
@@ -959,7 +960,7 @@ class life:
             "sex with "+self.name,WORLD.time(),self.position_,
             self.change_feeling(.6,{"tiring":.4})
         )})
-        _print(self.name,"and",another.name,"made a baby:",baby.name,file=LOGFILE)
+        _print(self.name,"and",another.name,"made a baby:",baby.name,file=OUTPUT_FILE)
         return baby
 class human(life):
     """human, subclass of life"""
@@ -1078,7 +1079,7 @@ class environment:
             i=self.lifes[time]
             i.update()
             if i.is_dead():
-                _print(i.name,f"died at age {i.age:.2f} years old.",file=LOGFILE)
+                _print(i.name,f"died at age {i.age:.2f} years old.",file=OUTPUT_FILE)
                 self.lifes.pop()
             else:
                 time+=1
@@ -1117,20 +1118,20 @@ interval: float=1/FPS
 start: float=time.time()
 while 1:
     if not WORLD.lifes:
-        _print(f"All lifes are dead in {WORLD.tick} ticks!",file=LOGFILE)
+        _print(f"All lifes are dead in {WORLD.tick} ticks!",file=OUTPUT_FILE)
         _print(f"All lifes are dead in {format_duration(WORLD.tick)}!")
         break
-    if WORLD.tick&4095==0 and WORLD.tick>0:
-        _print("4096 tick passed!")
-        LOGFILE.close()
-        LOGFILE=open("log.txt","a+",encoding="utf-8") # type: ignore
+    if WORLD.tick&16383==0 and WORLD.tick>0:
+        _print("16384 tick passed!")
+        OUTPUT_FILE.close()
+        OUTPUT_FILE=open("output.txt","a+",encoding="utf-8") # type: ignore
     WORLD.mainloop()
     # time.sleep(interval-((time.monotonic()-t)%interval))
 else:
-    pass # I don't know why I need this,
-         # but it keeps the bug away
+    _print("???") # I don't know why I need this,
+    # but it keeps the bug away
 delta: float=time.time()-start
-LOGFILE.close()
+OUTPUT_FILE.close()
 _print("Closed!")
 _print("Consumed",delta,"second.")
 _print(f"{WORLD.tick/delta:.2f} FPS")

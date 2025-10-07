@@ -364,8 +364,8 @@ class unconscious_mind:
             return (False,False)
         want: bool=False # It stats if we should operate on this event.
         noticed: bool=False
-        positivity: float=self.personality["positivity"].value # Optimize performance
-        negativity: float=self.personality["negativity"].value
+        positivity: float=1/(1-self.personality["positivity"].value) # Optimize performance
+        negativity: float=1/(1-self.personality["negativity"].value)
         patience: float=self.personality["patience"].value/10
         attention_span: float=self.personality["attention_span"].value
         memory_index: float=self.personality["memory_index"].value
@@ -376,15 +376,15 @@ class unconscious_mind:
                     continue
                 value: float=emotion.value
                 if name in POSITIVE_FEELINGS:
-                    self.feeling[name].value=(value-self.feeling[name].value)*positivity*(
+                    self.feeling[name].value=(value*positivity-self.feeling[name].value)*(
                         # more time no this emotion more this,same below
                         self.history_feeling_tick[name]/patience
                         # ten as the factor to low down personalities.patience
                         )
                     _sum+=self.feeling[name].value
                 else:
-                    self.feeling[name].value+=(value-self.feeling[name].value)*\
-                        negativity*(self.history_feeling_tick[name]/patience)
+                    self.feeling[name].value+=(value*negativity-self.feeling[name].value)\
+                        *(self.history_feeling_tick[name]/patience)
                     _sum-=self.feeling[name].value
             if abs(_sum)>attention_span:
                 # not matter it's too positive or too negative
@@ -405,17 +405,17 @@ class unconscious_mind:
     def most_want2do(self)->event:
         """return the most want to do event"""
         result: list[Union[str,float]]=["",sys.float_info.min]
-        positivity: float=self.personality["positivity"].value
-        negativity: float=self.personality["negativity"].value
+        positivity: float=1/(1-self.personality["positivity"].value)
+        negativity: float=1/(1-self.personality["negativity"].value)
         patience: float=self.personality["patience"].value
         for name,_event in self.memory.data.items():
             _sum: float=0
             for nam,emo in _event.feeling.items():
                 if nam in POSITIVE_FEELINGS:
-                    _sum+=(emo.value-self.feeling[nam].value)*positivity\
+                    _sum+=(emo.value-self.feeling[nam].value*positivity)\
                         *(self.history_feeling_tick[nam]/(patience*.1))
                 else:
-                    _sum-=(emo.value-self.feeling[nam].value)*negativity\
+                    _sum-=(emo.value-self.feeling[nam].value*negativity)\
                         *(self.history_feeling_tick[nam]/(patience*.1))
             if abs(_sum)>abs(result[1]): # type: ignore
                 result[1]=_sum
@@ -791,7 +791,7 @@ class life:
             self.dead_reason="starving"
             return
         dt: float=(self.current_biome.temperature-self.body_temp)/\
-            ((self.fat_index or 1)*1e7*len(self.hug2heat)) # 2e9 can make them being stable
+            ((self.fat_index or 1)*268435456*len(self.hug2heat)) # this can make them being stable
         self.body_temp+=dt
         self.temp_death(dt)
         if not self.in_sleep and self.energy<40:
@@ -847,6 +847,9 @@ class life:
             if a:
                 self.sex(a)
             # """
+        for i in self.unconscious.feeling:
+            # calmdown
+            self.unconscious.feeling[i].value-=1e-6
         positivity: float=self.personality["positivity"].value
         calmness: float=self.personality["calmness"].value
         if not self.unconscious.memory.data:

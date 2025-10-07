@@ -73,8 +73,7 @@ def shuffle(l: list[Any],repeat_weight: dict[Any,float]={})->list[Any]:
     for i in range(len(l)):
         candidates=list(counter.keys())
         if last is not None and last in candidates:
-            weight=repeat_weight.get(last,0.5)
-            if random.random()<weight:
+            if random.random()<repeat_weight.get(last,0.5):
                 # bigger, easier to repeat
                 candidates=[c for c in candidates if c != last]
         if not candidates:
@@ -125,9 +124,9 @@ def between(a: float,upper: float,lower: float):
     return lower<a<upper
 def format_duration(seconds: int)->str:
     """format the tick and output as date"""
-    days, remainder = divmod(seconds, 86400)
-    hours, remainder = divmod(remainder, 3600)
-    minutes, seconds = divmod(remainder, 60)
+    days,remainder=divmod(seconds,86400)
+    hours,remainder=divmod(remainder,3600)
+    minutes,seconds=divmod(remainder,60)
     return f"{days} days {hours:02}:{minutes:02}:{seconds:02}"
 # classes
 

@@ -456,7 +456,7 @@ class life:
               "fat_index","dead_reason","water_content",
               "gene","current_biome","hug2heat","stomach",
               "stomach_max","unconscious","frequent",
-              "freq_met","friends")
+              "freq_met","friends","max_age")
     def __init__(self,name: str,age: float,
                  personality: dict[str,personalities],pos: position):
         self.mind_: mind=mind(age,personality)
@@ -486,6 +486,7 @@ class life:
         self.frequent: dict[str,tuple[float,dict[str,event]]]={}
         self.freq_met: dict["life",int]={}
         self.friends: weakref.WeakSet[life]=weakref.WeakSet()
+        self.max_age: float=1
         # of certain events. Omit teaching
     def __hash__(self)->int:
         return hash(self.name)
@@ -567,14 +568,8 @@ class life:
     def is_dead(self)->bool:
         """check is dead"""
         if not self.is_alive:
-            self._del__()
             return True
         return False
-    def _del__(self):
-        """run when deleted(dead)"""
-        _print(f"[{WORLD.time()}]",self.name,
-        f"is dead due to {self.dead_reason}, in {self.current_biome.name}!",
-        file=OUTPUT_FILE)
     def get_current_biome(self)->biome:
         """get the certain biome"""
         return WORLD.map[int(self.position_.y/BIOME_SIZE)][int(self.position_.x/BIOME_SIZE)]
@@ -724,10 +719,53 @@ class life:
             "hug to gain heat",WORLD.time(),self.position_,
             self.change_feeling(.7)
         )})
+        # They should be more careful about hugging to gain heat
+        # Because, if they hug together,
+        # their movement will be bind to together, too.
+        # Moreover, they can't see the thing back at them
+        # And, if they once hugged, and STRONGLY want to move alone,
+        # It can quit it by using request.
+        # P.S. hug2gain_heat can improve relationship
         _print(", ".join(i.name for i in self.hug2heat),"hug to gain heat!",file=OUTPUT_FILE)
+    def temp_death(self,dt: float):
+        if self.body_temp>38:
+            cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
+            self.body_temp-=min((self.body_temp-36)*.1, cooling_rate)
+            self.unconscious_thinking({"feel hot":event("feel hot",WORLD.time(),
+                        self.position_,self.change_feeling(-.4))
+                        })
+        if self.current_biome.temperature>38:
+            if random.random()<.01:
+                # hot adapt
+                self.hydrolysis(.05)
+        elif self.current_biome.temperature<25:
+            if random.random()<.01:
+                # cold adapt
+                self.store_fat(90)
+                self.nutrition2energy()
+        if self.body_temp>38:
+            if self.fat_index>15 or dt>1:
+                self.sweat()
+        elif self.body_temp<30:
+            self.unconscious_thinking({"feel cold":event("feel cold",WORLD.time(),
+                        self.position_,self.change_feeling(-.4)
+                    )})
+            self.nutrition2energy()
+            self.shiver()
+        elif 34<self.body_temp<37:
+            self.unconscious_thinking({"feel warm":event("feel warm",WORLD.time(),
+                        self.position_,self.change_feeling(.6),
+                        [(self.hug2gain_heat,[(sort_chose,(WORLD.lifes,self,2))])]
+                    )})
+        if self.body_temp>44:
+            self.is_alive=False
+            self.dead_reason="heat"
+        elif self.body_temp<30:
+            self.is_alive=False
+            self.dead_reason="hypothermia"
     def update(self):
         """update the mainloop"""
-        if not self.is_alive:
+        if self.is_dead():
             return
         # grow
         self.mind_.grow(1)
@@ -737,6 +775,9 @@ class life:
         self.water_content-=3.858024691358025e-06
         self.nutrition2energy()
         # death operations
+        if self.age>=self.max_age:
+            self.is_alive=False
+            self.dead_reason="nature death"
         if self.water_content<25:
             self.is_alive=False
             self.dead_reason="dehydration"
@@ -749,6 +790,10 @@ class life:
             self.is_alive=False
             self.dead_reason="starving"
             return
+        dt: float=(self.current_biome.temperature-self.body_temp)/\
+            ((self.fat_index or 1)*1e7*len(self.hug2heat)) # 2e9 can make them being stable
+        self.body_temp+=dt
+        self.temp_death(dt)
         if not self.in_sleep and self.energy<40:
             if self.storage_fat<80-self.nutrition:
                 self.in_sleep=random.random()<.1
@@ -759,6 +804,13 @@ class life:
             if self.in_sleep:
                 _print(self.name,f"is in sleep at tick {WORLD.time()}!",file=OUTPUT_FILE)
         if self.in_sleep:
+            if between(abs(dt),3,2):
+                if between(self.body_temp,41,39):
+                    self.in_sleep=False
+                    _print(self.name,f"woke up due to heat at tick {WORLD.time()}!",file=OUTPUT_FILE)
+                elif between(self.body_temp,30,24):
+                    self.in_sleep=False
+                    _print(self.name,f"woke up due to cold at tick {WORLD.time()}!",file=OUTPUT_FILE)
             self.sleep()
             self.dream()
             if self.energy>=80:
@@ -886,45 +938,9 @@ class life:
         else:
             c=self.move()
         dx,dy=c()
-        dt: float=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(4e6)+\
-            (self.current_biome.temperature-self.body_temp)/\
-                ((self.fat_index or 1)*2e5*len(self.hug2heat))
+        dt=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(4e6)
         self.body_temp+=dt
-        if self.body_temp>38:
-            cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
-            self.body_temp-=min((self.body_temp-36)*.1, cooling_rate)
-            self.unconscious_thinking({"feel hot":event("feel hot",WORLD.time(),
-                        self.position_,self.change_feeling(-.4))
-                        })
-        if self.current_biome.temperature>38:
-            if random.random()<.01:
-                # hot adapt
-                self.hydrolysis(.05)
-        elif self.current_biome.temperature<25:
-            if random.random()<.01:
-                # cold adapt
-                self.store_fat(90)
-                self.nutrition2energy()
-        if self.body_temp>38:
-            if self.fat_index>15 or dt>1:
-                self.sweat()
-        elif self.body_temp<30:
-            self.unconscious_thinking({"feel cold":event("feel cold",WORLD.time(),
-                        self.position_,self.change_feeling(-.2)
-                    )})
-            self.nutrition2energy()
-            self.shiver()
-        elif 34<self.body_temp<37:
-            self.unconscious_thinking({"feel warm":event("feel warm",WORLD.time(),
-                        self.position_,self.change_feeling(.2),
-                        [(self.hug2gain_heat,[(sort_chose,(WORLD.lifes,self,2))])]
-                    )})
-        if self.body_temp>44:
-            self.is_alive=False
-            self.dead_reason="heat"
-        elif self.body_temp<30:
-            self.is_alive=False
-            self.dead_reason="hypothermia"
+        self.temp_death(dt)
     def sex(self,another: "life")->Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore
@@ -1073,16 +1089,20 @@ class environment:
         self.tick+=1
         for n in self.obj:
             n.update()
-        time: int=0
+        time: int=len(self.lifes)-1
         i: life
-        while time<len(self.lifes):
+        while time>-1:
             i=self.lifes[time]
             i.update()
             if i.is_dead():
+                _print(f"[{WORLD.time()}]",i.name,
+                f"is dead due to {i.dead_reason}{" in dream" if i.in_sleep else ""}, in {i.current_biome.name}!",
+                file=OUTPUT_FILE)
                 _print(i.name,f"died at age {i.age:.2f} years old.",file=OUTPUT_FILE)
-                self.lifes.pop()
-            else:
-                time+=1
+                _print(f"deleting {self.lifes[time].name}",file=OUTPUT_FILE)
+                self.lifes.pop(time)
+            time-=1
+            del i
         voices.clear()
 
 # example usage

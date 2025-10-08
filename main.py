@@ -60,7 +60,7 @@ def most_frequent(l: list[Any],default: Any)->Any:
     if not l:
         return default
     data: Counter[Any]=Counter(l)
-    max_freq=max(data.values())
+    max_freq: int=max(data.values())
     return random.choice(tuple(k for k,v in data.items() if v==max_freq))
 def random_string()->str:
     """return a random string"""
@@ -70,14 +70,15 @@ def shuffle(l: list[Any],repeat_weight: dict[Any,float]={})->list[Any]:
     r: list[Any]=[None]*len(l)
     counter: Counter[Any]=Counter(l)
     last: Any=None
+    candidates: tuple[Any]
     for i in range(len(l)):
-        candidates=list(counter.keys())
+        candidates=tuple(counter.keys())
         if last is not None and last in candidates:
             if random.random()<repeat_weight.get(last,0.5):
                 # bigger, easier to repeat
-                candidates=[c for c in candidates if c != last]
+                candidates=tuple(c for c in candidates if c != last)
         if not candidates:
-            candidates=list(counter.keys())
+            candidates=tuple(counter.keys())
         choice=random.choice(candidates)
         r[i]=choice
         counter[choice]-=1
@@ -96,7 +97,7 @@ def age2weight(age: float)->float:
     return 80/(1+math.exp((v-age)/s))
 def chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     """chose without repeat"""
-    new: list[Any]=[i for i in l if i is not t]
+    new: tuple[Any]=tuple(i for i in l if i is not t)
     if not new:
         return ()
     return tuple(random.sample(new,count))
@@ -134,9 +135,8 @@ def format_duration(seconds: int)->str:
 T=TypeVar("T")
 class queue(Generic[T]):
     """A simple queue with max size"""
-    __slots__=("max_size","data")
+    __slots__=("data",)
     def __init__(self,max_size: int):
-        self.max_size: int=max_size
         self.data: deque[T]=deque(maxlen=max_size)
     def enqueue(self,item: T):
         """Add item in the deque"""
@@ -178,7 +178,7 @@ class position:
         """set y"""
         self.data[1]=value
     def square_distance(self,other: "position")->float:
-        """return the euclidean distance without square. Good for comparing"""
+        """return the euclidean distance without square root. Good for comparing"""
         return (self.x-other.x)**2+(self.y-other.y)**2
     def distance(self,other: "position")->float:
         """return euclidean distance"""
@@ -286,7 +286,7 @@ class memory:
         return {i:emotion_stat(i,(random.random() or .001)) for i in FEELINGS} # fake some memory
     def forget(self,name: str)->Optional[event]:
         """Forget the curtain event"""
-        return self.data.pop(name,None) # forget the first event remembered
+        return self.data.pop(name) # forget the first event remembered
     def remember_e(self,e: event):
         """remember an event"""
         self.recent_event.enqueue(e)
@@ -318,6 +318,7 @@ class mind:
         self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,0) for i in FEELINGS}
     def feel(self,name: str)->dict[str,emotion_stat]:
         """Feel a certain event"""
+        # Should be more complicated
         return self.memory.data[name].feeling
     def forget(self,name: str)->Optional[event]:
         """simply forget it"""
@@ -337,12 +338,12 @@ class mind:
         return self.memory.remember_e(e)
     def grow(self,time_delta: float):
         """your mind grows to be more stable and calm(unless the calmness is negative!)"""
-        calmness: float=self.personality["calmness"].value
+        calmness: float=.1/self.personality["calmness"].value
         self.age+=time_delta/31536000
         for i in self.personality.values():
             # when you grow you become calmer
-            i.value+=i.value* \
-            random.uniform(-0.1/calmness,0.1/calmness)*time_delta/31536000
+            i.value+=i.value*\
+            random.uniform(-calmness,calmness)*time_delta/31536000
     def fake(self,e: event):
         """Fake something you don't wanna to"""
         feeling: dict[str,emotion_stat]=e.feeling
@@ -425,16 +426,16 @@ class unconscious_mind:
         result: list[Union[str,float]]=["",sys.float_info.min]
         positivity: float=1/(1-self.personality["positivity"].value)
         negativity: float=1/(1-self.personality["negativity"].value)
-        patience: float=self.personality["patience"].value
+        patience: float=self.personality["patience"].value*.1
         for name,_event in self.memory.data.items():
             _sum: float=0
             for nam,emo in _event.feeling.items():
                 if nam in POSITIVE_FEELINGS:
-                    _sum+=(emo.value-self.feeling[nam].value*positivity)\
-                        *(self.history_feeling_tick[nam]/(patience*.1))
+                    _sum+=(emo.value*positivity-self.feeling[nam].value)\
+                        *(self.history_feeling_tick[nam]/patience)
                 else:
-                    _sum-=(emo.value-self.feeling[nam].value*negativity)\
-                        *(self.history_feeling_tick[nam]/(patience*.1))
+                    _sum-=(emo.value*negativity-self.feeling[nam].value)\
+                        *(self.history_feeling_tick[nam]/patience)
             if abs(_sum)>abs(result[1]): # type: ignore
                 result[1]=_sum
                 result[0]=name
@@ -442,7 +443,7 @@ class unconscious_mind:
             return POINTLESS_EVENT
         for i in (POSITIVE_FEELINGS if result[1]>0 else NEGATIVE_FEELINGS): # type: ignore
             self.history_feeling_tick[i]=1
-        return self.memory.data[result[0]] # type: ignore
+        return self.memory.data.get(result[0],POINTLESS_EVENT) # type: ignore
     def feel(self,name: str)->dict[str,emotion_stat]:
         """Feel a certain event"""
         # requires to be more complicated,
@@ -470,7 +471,7 @@ class unconscious_mind:
             self.affect_event(i,b)
 class life:
     """ a living thing,more then a mind,or soul."""
-    __slots__=("mind_","name","age","personality",
+    __slots__=("mind_","name","personality",
               "position_","love","tick","nutrition",
               "energy","is_alive","in_sleep","body_temp",
               "storage_fat","weight","extra_weight",
@@ -479,11 +480,10 @@ class life:
               "stomach_max","unconscious","frequent",
               "freq_met","friends","max_age",
               "important_events")
-    def __init__(self,name: str,age: float,
+    def __init__(self,name: str,
                  personality: dict[str,personalities],pos: position):
-        self.mind_: mind=mind(age,personality)
+        self.mind_: mind=mind(0,personality)
         self.name: str=name
-        self.age: float=age
         self.personality: dict[str,personalities]=personality
         self.position_: position=pos
         self.love: dict[str,event]={}
@@ -493,7 +493,7 @@ class life:
         self.in_sleep: bool=False
         self.nutrition: float=100.0
         self.storage_fat: float=0.0
-        self.weight: float=2.0 # in kg
+        self.weight: float=3.3 # in kg
         self.extra_weight: float=0
         self.body_temp: float=36.0 # in celsius
         self.fat_index: float=10
@@ -511,6 +511,8 @@ class life:
         self.max_age: float=1
         self.important_events: weakref.WeakKeyDictionary[str,set[event]]=weakref.WeakKeyDictionary()
         # of certain events. Omit teaching
+    def get_age(self)->float:
+        return self.tick/31536000
     def __hash__(self)->int:
         return hash(self.name)
     def unconscious_thinking(self,thought: dict[str,event])->tuple[bool,bool]:
@@ -530,11 +532,13 @@ class life:
         return self.unconscious.most_want2do()
     def friend(self,obj: "life"):
         """see somebody as a friend"""
+        temp: Callable[...,str]=lambda x: x # type: ignore
         e: event=event(
             f"friend {obj.name}",
             WORLD.time(),
             self.position_,
-            self.mind_.feeling
+            self.mind_.feeling,
+            [(self.friend,[(temp,(obj.name,))])] # type: ignore
         )
         self.mind_.memory.remember_e(e)
         self.friends.add(obj)
@@ -546,6 +550,7 @@ class life:
         """Request somebody for something"""
         obj.recieve(request)
     def recieve(self,request: str):
+        """LOCI---Life Object Communcating Interface"""
         # Must recieve the request, then
         # do the specific action
         self.__dict__[request]()
@@ -553,8 +558,7 @@ class life:
         """grow in body"""
         # simply add the self tick,which does not matters to the emotion,but body
         self.tick+=tick
-        self.age+=tick/31536000
-        self.weight=age2weight(self.age)
+        self.weight=age2weight(self.get_age())
         self.storage_fat=self.weight*self.fat_index
     def listen(self)->list[str]:
         """listen to the voices"""
@@ -813,7 +817,7 @@ class life:
         self.water_content-=3.858024691358025e-06
         self.nutrition2energy()
         # death operations
-        if self.age>=self.max_age:
+        if self.get_age()>=self.max_age:
             self.is_alive=False
             self.dead_reason="nature death"
         if self.water_content<25:
@@ -1003,7 +1007,7 @@ class life:
             another.position_.y+random.uniform(-1,1),# some mutation
             f"{self.name} & {another.name}'s baby brithplace"
         )
-        baby: life=life(f"{self.name}&{another.name}-baby",0,personality,pos)
+        baby: life=life(f"{self.name}&{another.name}-baby",personality,pos)
         WORLD.append_life(baby)
         baby.gene=mixture(self.gene,another.gene)
         self.energy-=20
@@ -1078,7 +1082,7 @@ class environment:
         for x,n in enumerate(self.map):
             for y,i in enumerate(n):
                 for _ in range(int(max(i.water_required/10,1))):
-                    if random.random()<self.water_content/10**math.log10(self.water_content):
+                    if random.random()<self.water_content/10**int(math.log10(self.water_content)):
                         self.obj.append(dobj("food",
                                 position(x+random.uniform(0,BIOME_SIZE),y+\
                                     random.uniform(0,BIOME_SIZE),"food")
@@ -1139,7 +1143,7 @@ class environment:
                 _print(f"[{WORLD.time()}]",i.name,
                 f"is dead due to {i.dead_reason}{" in dream" if i.in_sleep else ""}, in {i.current_biome.name}!",
                 file=OUTPUT_FILE)
-                _print(i.name,f"died at age {i.age:.2f} years old.",file=OUTPUT_FILE)
+                _print(i.name,f"died at age {i.get_age():.2f} years old.",file=OUTPUT_FILE)
                 _print(f"deleting {self.lifes[time].name}",file=OUTPUT_FILE)
                 self.lifes.pop(time)
             time-=1
@@ -1165,12 +1169,12 @@ personality: dict[str,personalities]={
 adam_home: position=position(0,0,"adam's")
 WORLD: environment=environment(20,20,2/3,[],[])
 WORLD.init()
-adam=human("亞當",0,personality,adam_home)
-eve=human("夏娃",0,personality,position(5,5,"eve's"))
+adam=human("亞當",personality,adam_home)
+eve=human("夏娃",personality,position(5,5,"eve's"))
 nd: dict[str,list[str]]=NameDataset().get_top_names(4, # type: ignore
     use_first_names=True,country_alpha2="GB")["GB"]
-humans: list[human]=[adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"])]
-WORLD.append_life(adam,eve,*(human(i,0,personality,adam_home) for i in nd["M"]+nd["F"]))
+humans: list[human]=[adam,eve,*(human(i,personality,adam_home) for i in nd["M"]+nd["F"])]
+WORLD.append_life(adam,eve,*(human(i,personality,adam_home) for i in nd["M"]+nd["F"]))
 for i in humans:
     _print(i.name,tuple(i.name for i in
         sort_chose(humans,i,len(humans))))

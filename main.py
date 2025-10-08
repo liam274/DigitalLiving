@@ -575,8 +575,9 @@ class life:
                 # skip own word
                 continue
             s: str=""
+            a: str
             for n in string:
-                a: str=chr(
+                a=chr(
                     math.floor(ord(n)+
                                random.uniform(0,.5)*position.distance(self.position_)
                                )
@@ -594,6 +595,7 @@ class life:
     def percieve_event(self,e: event):
         """see an event and act la"""
         if self.unconscious_thinking({e.name:e})[1]:
+            # remember based on noticed or not
             self.unconscious.remember_e(e)
     def is_dead(self)->bool:
         """check is dead"""
@@ -602,6 +604,7 @@ class life:
         return False
     def get_current_biome(self)->biome:
         """get the certain biome"""
+        # This expensive move will only be applyed on position changing.
         return WORLD.map[int(self.position_.y/BIOME_SIZE)][int(self.position_.x/BIOME_SIZE)]
     def nutrition2energy(self):
         """change nutrition to energy"""
@@ -620,7 +623,7 @@ class life:
         # According to Penman equation
         total_heat_load: float=.1*(self.current_biome.temperature-\
             self.body_temp)+1898.925*(self.body_temp-37)
-        sweat_cooling: float=total_heat_load*min(1,(self.body_temp-37)*.3)*.01
+        sweat_cooling: float=total_heat_load*min(.01,(self.body_temp-37)*.003)
         self.body_temp-=sweat_cooling
         self.water_content=(self.get_weight()*\
             self.water_content-sweat_cooling*.8)/self.get_weight()
@@ -727,7 +730,7 @@ class life:
             self.water_content+=(self.nutrition-limit)*.5
             self.extra_weight+=(self.nutrition-limit)*1.4
             # the density of fat is .9 g/ml, while water is 1 g/ml
-            self.stomach-=(self.nutrition-limit)/4
+            self.stomach-=(self.nutrition-limit)*.25
             self.nutrition-=self.nutrition-limit
             self.unconscious_thinking({"store fat":event(
                 "store fat",WORLD.time(),self.position_,
@@ -753,7 +756,7 @@ class life:
     def get_weight(self)->float:
         """return the exact weight"""
         return self.weight+self.extra_weight
-    def hug2gain_heat(self,another: tuple["life"]):
+    def hug2gain_heat(self,another: tuple["life",...],tiggered: bool=False):
         """hug to gain heat"""
         for i in another:
             self.hug2heat.add(i)
@@ -768,8 +771,14 @@ class life:
         # And, if they once hugged, and STRONGLY want to move alone,
         # It can quit it by using request.
         # P.S. hug2gain_heat can improve relationship
+        if tiggered:
+            return
+        for i in another:
+            i.hug2gain_heat(tuple(set(another)^{i,}),True)
         _print(", ".join(i.name for i in self.hug2heat),"hug to gain heat!",file=OUTPUT_FILE)
     def temp_death(self,dt: float):
+        """check for tempature, if its in some specific condition,
+        it makes the object dies."""
         if self.body_temp>38:
             cooling_rate: float=.5+(1/((self.fat_index or 1)+.5))
             self.body_temp-=min((self.body_temp-36)*.1, cooling_rate)
@@ -827,13 +836,14 @@ class life:
         if self.energy<=0:
             if self.nutrition<=0:
                 self.hydrolysis(min(self.storage_fat,100))
-            else:
-                self.nutrition2energy()
-            self.is_alive=False
-            self.dead_reason="starving"
-            return
+            self.nutrition2energy()
+            if self.energy<=0:
+                self.is_alive=False
+                self.dead_reason="starving"
+                return
         dt: float=(self.current_biome.temperature-self.body_temp)/\
-            ((self.fat_index or 1)*268435456*len(self.hug2heat)) # this can make them being stable
+            ((self.fat_index or 1)*268435456*len(self.hug2heat)) 
+        # this can make them being stable
         self.body_temp+=dt
         self.temp_death(dt)
         if not self.in_sleep and self.energy<40:
@@ -889,9 +899,6 @@ class life:
             if a:
                 self.sex(a)
             # """
-        for i in self.unconscious.feeling:
-            # calmdown
-            self.unconscious.feeling[i].value-=1e-6
         positivity: float=self.personality["positivity"].value
         calmness: float=self.personality["calmness"].value
         if not self.unconscious.memory.data:
@@ -959,11 +966,12 @@ class life:
                     continue
                 if value<=const2:
                     self.unconscious.history_feeling_tick[_name]=0
-            if name not in self.mind_.concepts: # make concepts
+            if name not in self.mind_.concepts:
+                # make concepts
                 m: str=most_frequent(self.listen(),random_string())
                 self.mind_.concepts.update({m:{m:e}})
                 self.communicate((m,))
-        if self.water_content<60:
+        if self.water_content<50:
             self.unconscious_thinking({"be thirsty":event("be thirsty",
                         WORLD.time(),self.position_,self.change_feeling(-.4)
                         )}
@@ -986,11 +994,14 @@ class life:
         dt=math.sqrt(dx*dx+dy*dy)*(self.fat_index or 1)/(4e6)
         self.body_temp+=dt
         self.temp_death(dt)
+        for i in self.unconscious.feeling:
+            # calmdown
+            self.unconscious.feeling[i].value-=1e-6
     def sex(self,another: "life")->Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore
             return None
-        if self.position_.square_distance(another.position_)>100:
+        if self.position_.square_distance(another.position_)>10:
             return None # too far away
         personality: dict[str,personalities]={}
         for i in PERSONALITIES:

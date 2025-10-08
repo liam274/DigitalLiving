@@ -193,7 +193,7 @@ class personalities:
     """state personalities"""
     name: str
     value: float
-@dataclass(slots=True,frozen=True)
+@dataclass(slots=True)
 class event:
     """state event"""
     name: str
@@ -216,6 +216,21 @@ class event:
     #     ]
     #   ]
     # ]
+    relate_event: set["event"]=field(default_factory=set["event"])
+    # So the change of the event feeling will also affect the related events.
+    def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:
+        """+ \\+ for positive feeling, - for negative feeling"""
+        result: dict[str,emotion_stat]={
+            i:emotion_stat(i,emo.value+(n*(-1)**(int(i
+                in POSITIVE_FEELINGS)+1)))
+            for i,emo in self.feeling.items()
+        }
+        for i,_ in result.copy().items():
+            if i in specific:
+                result[i].value+=specific[i]
+        return result
+    def __hash__(self)->int:
+        return hash((self.name,self.time,self.venue))
 voices: dict[tuple[Union["environment","life"],position],str]={}
 POINTLESS_EVENT: event=event("",0,position(0,0,""),{})
 
@@ -390,8 +405,12 @@ class unconscious_mind:
                 # it will still being remembered
                 self.memory.remember(
                     # flow the memory,the memory index is all about how good your memory is.
-                    details,_event.time,_event.venue,_event.feeling,memory_index
+                    details,_event.time,_event.venue,
+                    _event.change_feeling((-1)**(int(want)+1)*.4),
+                    memory_index
                     )
+                for i in _event.relate_event:
+                    self.affect_event(i,(-1)**(int(want)+1))
                 temp: dict[str,event]=self.mind_.concepts.get(details,{})
                 temp.update({details:_event})
                 self.mind_.concepts[details]=temp
@@ -444,6 +463,11 @@ class unconscious_mind:
     def remember_e(self,e: event):
         """remember some event permanently(almost!)"""
         return self.memory.remember_e(e)
+    def affect_event(self,e: event,b: int=1):
+        """affect the event in order to 飲水思源"""
+        e.feeling=e.change_feeling(b*.4)
+        for i in e.relate_event:
+            self.affect_event(i,b)
 class life:
     """ a living thing,more then a mind,or soul."""
     __slots__=("mind_","name","age","personality",
@@ -453,7 +477,8 @@ class life:
               "fat_index","dead_reason","water_content",
               "gene","current_biome","hug2heat","stomach",
               "stomach_max","unconscious","frequent",
-              "freq_met","friends","max_age")
+              "freq_met","friends","max_age",
+              "important_events")
     def __init__(self,name: str,age: float,
                  personality: dict[str,personalities],pos: position):
         self.mind_: mind=mind(age,personality)
@@ -484,6 +509,7 @@ class life:
         self.freq_met: dict["life",int]={}
         self.friends: weakref.WeakSet[life]=weakref.WeakSet()
         self.max_age: float=1
+        self.important_events: weakref.WeakKeyDictionary[str,set[event]]=weakref.WeakKeyDictionary()
         # of certain events. Omit teaching
     def __hash__(self)->int:
         return hash(self.name)
@@ -504,15 +530,18 @@ class life:
         return self.unconscious.most_want2do()
     def friend(self,obj: "life"):
         """see somebody as a friend"""
-        self.mind_.memory.remember(
-            obj.name,
+        e: event=event(
+            f"friend {obj.name}",
             WORLD.time(),
             self.position_,
-            self.mind_.feeling,
-            self.personality["calmness"].value
-            ) # memorize the new friend
+            self.mind_.feeling
+        )
+        self.mind_.memory.remember_e(e)
         self.friends.add(obj)
         self.communicate((random_string()+" "+obj.name,))
+        temp: set[event]=self.important_events.get("friend",set())
+        temp.add(e)
+        self.important_events.update({"friend":temp})
     def request(self,obj: "life",request: str):
         """Request somebody for something"""
         obj.recieve(request)
@@ -593,15 +622,26 @@ class life:
             self.water_content-sweat_cooling*.8)/self.get_weight()
         self.energy-=sweat_cooling*.01
     def get_stomach(self):
+        """return self.stomach, for want2do attr in event"""
         return self.stomach
     def gift(self,dm: float,from_whom: "life"):
         """recieve gift, be thankful"""
+        temp: event=POINTLESS_EVENT
+        for i in self.important_events.get("friend",set()):
+            if i.name==from_whom.name:
+                temp=i
+                break
+        else:
+            _print(self.name+":","who sent me a gift that isn't my friend?")
+            return
         self.stomach+=dm
         self.unconscious_thinking({f"a gift from {from_whom.name}":
             event(f"a gift from {from_whom.name}",WORLD.time(),
             self.position_,self.change_feeling(.5/self.personality["calmness"].value),
-            [(self.gift,[(min,(10,self.get_stomach))])])
+            [(self.gift,[(min,(10,self.get_stomach))])],{temp,})
             })
+        # This should add something, so the event will be related to
+        # friendship, and improve the event(so do the relationship)
     def meet(self,another: tuple["life"]):
         """met somebody, chose to be friend or whatever"""
         result: tuple[bool,bool]
@@ -642,6 +682,8 @@ class life:
         self.energy-=math.sqrt((ox-self.position_.x)**2+(oy-self.position_.y)**2)*.00001
         self.current_biome=self.get_current_biome()
         def pos()->tuple[float,float]:
+            """The point of this function, is it's a callable.
+            So, it can be stored, transported and used in want2do"""
             return (ox-self.position_.x,oy-self.position_.y)
         return pos
     def change_feeling(self,n: float,specific: dict[str,float]={})->dict[str,emotion_stat]:

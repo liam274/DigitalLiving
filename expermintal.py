@@ -8,6 +8,6 @@ for _ in range(10):
     start: float = time.time()
     subprocess.run(["python", "main.py"],stdout=sys.stdout)
     l.append(time.time()-start)
-    with open("log.txt","r",encoding="utf-8") as file:
+    with open("output.txt","r",encoding="utf-8") as file:
         ls.append(file.readlines()[-1])
 print(l,ls,sep="\n\n\n")

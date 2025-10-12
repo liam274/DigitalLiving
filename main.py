@@ -302,6 +302,10 @@ class memory:
         return self.data.pop(name) # forget the first event remembered
     def remember_e(self,e: event):
         """remember an event"""
+        if e.name in self.data:
+            self.data[e.name].time+=1
+            self.recent_event.enqueue(self.data[e.name])
+            return
         self.recent_event.enqueue(e)
         self.data[e.name]=e
     def remember(self,name: str,t: int,venue: position,
@@ -317,6 +321,10 @@ class memory:
                          for i in FEELINGS} # noise factors
                          ,what2do,related_event
                        )
+        if name in self.data:
+            self.data[name].time+=1
+            self.recent_event.enqueue(self.data[name])
+            return
         self.data[name]=e
         self.recent_event.enqueue(e)
 class mind:
@@ -602,7 +610,7 @@ class life:
         # simply add the self tick,which does not matters to the emotion,but body
         self.tick+=tick
         self.weight=age2weight(self.get_age())
-        self.storage_fat=self.weight*self.fat_index
+        self.fat_index=self.storage_fat/self.weight
     def listen(self)->list[str]:
         """listen to the voices"""
         global voices
@@ -654,9 +662,9 @@ class life:
         if self.energy<=40 and self.nutrition<0:
             if self.storage_fat>0 and self.nutrition<50:
                 self.hydrolysis(10)
-            self.energy+=min(10,self.nutrition)*.9
-            # 1克糖原能化為.9克葡萄糖
-            # 因為脫離的水分子
+            self.energy+=min(10,self.nutrition)*1.1
+            # 1克糖原能化為1.1克葡萄糖
+            # 因為加入水解的水分子所以增加質量
             self.nutrition-=min(10,self.nutrition)
     def shiver(self):
         """shiver to gain heat"""
@@ -705,7 +713,7 @@ class life:
                     personality_transform(self.personality,{"positivity":.6}),1
                     ,self.change_feeling(.1))
                 ))
-                if all(result):
+                if all(result[:2]):
                     dm: float=max(5,self.stomach)
                     self.stomach-=dm
                     i.gift(dm,self)
@@ -719,7 +727,7 @@ class life:
                 self.friend(i,result[2])
     def move(self,_pos: Optional[position]=None,
              dx: Optional[float]=None,
-             dy: Optional[float]=None)->Callable[...,Any]:
+             dy: Optional[float]=None)->Callable[...,tuple[float,float]]:
         """move to somewhere"""
         # This should consider the event in this position, and
         # change the idea.
@@ -734,7 +742,8 @@ class life:
         oy: float=self.position_.y
         self.position_.x=max(0,min(WORLD.width-1,self.position_.x+dx))
         self.position_.y=max(0,min(WORLD.height-1,self.position_.y+dy))
-        self.energy-=math.sqrt((ox-self.position_.x)**2+(oy-self.position_.y)**2)*.00001
+        self.energy-=math.sqrt((ox-self.position_.x)**2+\
+            (oy-self.position_.y)**2)*.00000001
         self.current_biome=self.get_current_biome()
         def pos()->tuple[float,float]:
             """The point of this function, is it's a callable.
@@ -790,7 +799,7 @@ class life:
         """do hydrolysis to fat."""
         if self.storage_fat<=0:
             return False
-        self.nutrition+=min(self.storage_fat,amount)*2.6
+        self.nutrition+=min(self.storage_fat,amount)*2.57 # 2.34*1.1
         self.water_content-=min(self.storage_fat,amount)*.8
         self.fat_index=1-(amount/self.storage_fat)
         self.storage_fat-=amount
@@ -845,7 +854,7 @@ class life:
         elif self.current_biome.temperature<25:
             if random.random()<.01:
                 # cold adapt
-                self.store_fat(90)
+                self.store_fat(95)
                 self.nutrition2energy()
         if 34<self.body_temp<37:
             self.unconscious_thinking(("feel warm",event("feel warm",WORLD.time(),
@@ -853,12 +862,12 @@ class life:
                         ,self.change_feeling(.6),
                         [(self.hug2gain_heat,[(sort_chose,(WORLD.lifes,self,2))])]
                     )))
-        elif self.body_temp<30:
+        elif self.body_temp<34:
             self.unconscious_thinking(("feel cold",event("feel cold",WORLD.time(),
                         self.position_,personality_transform(self.personality,{}),1
                         ,self.change_feeling(-.4)
                     )))
-        elif self.body_temp>38:
+        else:
             if self.fat_index>15 or dt>1:
                 self.sweat()
             self.nutrition2energy()
@@ -921,8 +930,6 @@ class life:
             if self.energy>=80:
                 self.in_sleep=False
                 print(self.name,f"woke up just at tick {WORLD.time()}!",file=OUTPUT_FILE)
-            else:
-                self.hydrolysis(80-self.nutrition)
             return
         if self.touch_food():
             print(self.name,"found food!",file=OUTPUT_FILE)
@@ -946,7 +953,7 @@ class life:
                         ,self.change_feeling(-.1)
                     )
             ))
-        if self.stomach>self.stomach_max+30:
+        if self.stomach>self.stomach_max*1.3:
             self.is_alive=False
             self.dead_reason="Stomach Rupture"
         """解放人性
@@ -990,11 +997,11 @@ class life:
                     self.position_,personality_transform(self.personality,{}),1
                     ,self.change_feeling(0,{"hopeful":.5/calmness})))
             )
-        for i in tuple(self.unconscious.thoughts):
+        for i in self.unconscious.thoughts:
             want: bool
             noticed: bool
             _: dict[str,float]
-            want,noticed,_=self.unconscious_thinking(list(i.items())[0])
+            want,noticed,_=self.unconscious_thinking(tuple(i.items())[0])
             if noticed:
                 print(self.name+":","I"+" don't"*int(not want)\
                     +" want to",tuple(i.keys())[0],file=OUTPUT_FILE)
@@ -1014,7 +1021,8 @@ class life:
                 # list[tuple[Callable[...,Any],list[tuple[Callable[...,Any],tuple[Any,...]]]]]
                 i[0](*(func(*((n() if isinstance(n,types.FunctionType)
                     else n) for n in arg)) for func,arg in i[1]))
-                print(self.name,"is doing",tuple(self.unconscious.thoughts.data[0].values())[0].name,file=OUTPUT_FILE)
+                print(self.name,"is doing",tuple(self.unconscious.thoughts.data[0]\
+                    .values())[0].name,file=OUTPUT_FILE)
             for t,(_name,emotion) in enumerate(e.feeling.items()):
                 # loop through the feeling and change it if it's remembered
                 self.unconscious.history_feeling_tick[_name]+=1
@@ -1065,7 +1073,10 @@ class life:
         for i in result:
             if i in self.mind_.concepts:
                 self.mind_.concepts[i][i].time+=1
-            elif self.unconscious.recall(i).time>self.personality["attention_span"].value:
+            elif self.unconscious.recall(i).time>\
+                self.personality["attention_span"].value:
+                # repeat too many times
+                # I can't really understand this piece of code, just a guess.
                 pass
         for i in self.unconscious.feeling:
             # calmdown
@@ -1080,16 +1091,15 @@ class life:
         for i in PERSONALITIES:
             # give random weights
             w1: float=random.random()
-            w2: float=random.random()
             personality[i]=personalities(
                 i,
-                (self.personality[i].value*w1+another.personality[i].value*w2)/(w1+w2)+
+                (self.personality[i].value*w1+another.personality[i].value*(1-w1))+
                 random.uniform(-0.1,0.1) # some mutation
             )
         pos: position=position(
             another.position_.x+random.uniform(-1,1),# some mutation
             another.position_.y+random.uniform(-1,1),# some mutation
-            f"{self.name} & {another.name}'s baby brithplace"
+            f"{self.name} & {another.name}'s baby birthplace"
         )
         baby: life=life(f"{self.name}&{another.name}-baby",personality,pos)
         WORLD.append_life(baby)

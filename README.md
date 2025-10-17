@@ -55,6 +55,6 @@ The output of certain program will be stored in `output.txt`
 
 ## 📄 授權條款
 
-本作品採用 [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/) 授權。
+本作品採用 [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/) 授權。
 
 您可以自由分享與改作，但不得用於商業用途，且需標註原作者。

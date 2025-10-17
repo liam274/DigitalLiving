@@ -1,5 +1,12 @@
 # 群居--生命模擬系統
 這是一個數字生命模擬系統，旨在好玩
+## 使用說明
+這是一個CLI程序，若果想要觀看地圖，請解註部份代碼
+This is a CLI program, if you want to see the map of the biomes, please un-comment segment of codes.
+本程序將會生成數個文件，請勿亂動。
+This program will generates several files, please don't change it unless emergency.
+本程序之輸出將會在`output.txt`內進行
+The output of certain program will be stored in `output.txt`
 ## 原理
 本項目的基本原理是根據我自己內省而得出的心理學。
 ### 我的心理學

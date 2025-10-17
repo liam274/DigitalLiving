@@ -51,16 +51,6 @@ if os.path.exists("output.txt"):
         file.write("") # clear the file
 OUTPUT_FILE: TextIO=open("output.txt","a",encoding="utf-8")
 
-if os.path.exists("state.stat"):
-    with open("state.stat","r",encoding="utf-8") as file:
-        if file.readlines():
-            print("quit due to another running process...")
-            sys.exit()
-    with open("state.stat","w",encoding="utf-8") as file:
-        file.write("on") # state machine is on
-else:
-    with open("state.stat","a+",encoding="utf-8") as file:
-        file.write("on")
 # funcs
 
 def split(l: list[Any],size: int)->list[list[Any]]:
@@ -534,7 +524,7 @@ class life:
               "position_","love","tick","nutrition",
               "energy","is_alive","in_sleep","body_temp",
               "storage_fat","weight","extra_weight",
-              "fat_index","dead_reason","water_content",
+              "fat_index","water_content",
               "gene","current_biome","hug2heat","stomach",
               "stomach_max","unconscious","frequent",
               "freq_met","friends","max_age",
@@ -559,7 +549,6 @@ class life:
         self.extra_weight: float=0
         self.body_temp: float=36.0 # in celsius
         self.fat_index: float=10
-        self.dead_reason: str=""
         self.water_content: float=85 # in percentage
         self.gene: dict[str,dict[str,float]]={"event_requirement":{}} # This forms the reaction
         self.current_biome: biome=self.get_current_biome()
@@ -789,6 +778,7 @@ class life:
             if abs(self.position_.x-i.pos.x)>5 or abs(self.position_.y-i.pos.y)>5:
                 continue
             if self.position_.square_distance(i.pos)<=25 and "food"==i.name:
+                WORLD.obj.remove(i)
                 return True
         return False
     def store_fat(self,limit: float=100):
@@ -886,10 +876,18 @@ class life:
             self.shiver()
         if self.body_temp>44:
             self.is_alive=False
-            self.dead_reason="heat"
         elif self.body_temp<30:
             self.is_alive=False
-            self.dead_reason="hypothermia"
+    def get_dead_reason(self)->str:
+        r: set[str]={
+            "heat" if self.body_temp>44 else "",
+            "hypothermia" if self.body_temp<30 else "",
+            "nature deat" if self.get_age()>=self.max_age else "",
+            "dehydration" if self.water_content<25 else "",
+            "starving" if self.energy<0 else "",
+            "stomach rupture" if self.stomach>self.stomach_max*1.3 else ""
+        }
+        return ", ".join(filter(bool,r))
     def update(self):
         """update the mainloop"""
         if self.is_dead():
@@ -906,15 +904,12 @@ class life:
         # death operations
         if self.get_age()>=self.max_age:
             self.is_alive=False
-            self.dead_reason="nature death"
             return
         if self.water_content<25:
             self.is_alive=False
-            self.dead_reason="dehydration"
             return
         if self.energy<=0:
             self.is_alive=False
-            self.dead_reason="starving"
             return
         dt: float=(self.current_biome.temperature-self.body_temp)/\
             ((self.fat_index or 1)*536870912*len(self.hug2heat))
@@ -969,8 +964,7 @@ class life:
             ))
         if self.stomach>self.stomach_max*1.3:
             self.is_alive=False
-            self.dead_reason="Stomach Rupture"
-        # """解放人性
+        """解放人性
         if self.storage_fat>0 and self.energy>90:
             a: life=chose(WORLD.lifes,self)[0]
             if a:
@@ -1095,7 +1089,7 @@ class life:
                 pass
         for i in self.unconscious.feeling:
             # calmdown
-            self.unconscious.feeling[i].value-=1e-6
+            self.unconscious.feeling[i].value-=1e-4
     def sex(self,another: "life")->Optional["life"]:
         """make a baby with another life"""
         if not isinstance(another,life): # type: ignore
@@ -1154,12 +1148,13 @@ class dobj:
     name: str
     pos: position
     def update(self):
-        """update the object, usually useless"""
+        """update the object, usually useless. Stated here as a default, could be covered"""
         pass
 class environment:
     """define the environment"""
     __slots__=("width","height","size","biomes",
-                 "water_content","water","tick","obj","lifes","map")
+                 "water_content","water","tick",
+                 "obj","lifes","map","history")
     def __init__(self,width: int,height: int,
                  water_content: float,obj: list[dobj],lifes: list[life]):
         self.width: int=width*BIOME_SIZE
@@ -1173,6 +1168,7 @@ class environment:
         self.obj: list[dobj]=obj
         self.lifes: list[life]=lifes
         self.map: list[list[biome]]=[]
+        self.history: dict[str,int]={"food":0}
     def init(self):
         """initalize the environment"""
         self.generate_map()
@@ -1195,11 +1191,12 @@ class environment:
                 for _ in range(int(max(i.water_required/10,1))):
                     if random.random()<self.water_content/10**int(math.log10(self.water_content)):
                         self.obj.append(dobj("food",
-                                position(x+random.uniform(0,BIOME_SIZE),y+\
-                                    random.uniform(0,BIOME_SIZE),"food")
+                                position(x*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
+                                    y*BIOME_SIZE+random.uniform(0,BIOME_SIZE),"food"
+                                )
                             )
                         )
-        print(len(self.obj))
+        print(len(self.obj),file=sys.stderr)
         """
         root: tk.Tk=tk.Tk()
         root.title("Color Grid Map")
@@ -1234,13 +1231,24 @@ class environment:
         global voices
         # """
         for t,n in enumerate(self.map):
-            for t2 in range(len(n)):
+            for t2,m in enumerate(n):
                 if random.random()<.1:
                     voices.update({
                         (self,position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
                             t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),"")):
                         random_string()
                     })
+        if self.history["food"]==1024:
+            for t,n in enumerate(self.map):
+                for t2,m in enumerate(n):
+                    for _ in range(max(m.water_required//10,1)): # type: ignore
+                        if random.random()<self.water_content/10**int(math.log10(self.water_content)):
+                            self.obj.append(dobj("food",
+                                position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
+                                    t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),"food")
+                            ))
+                    self.history["food"]=0
+        self.history["food"]+=1
         # """
         self.tick+=1
         for n in self.obj:
@@ -1252,7 +1260,7 @@ class environment:
             i.update()
             if i.is_dead():
                 print(f"[{WORLD.time()}]",i.name,
-                f"is dead due to {i.dead_reason}{" in dream" if i.in_sleep else ""}, in {i.current_biome.name}!",
+                f"is dead due to ({i.get_dead_reason()}){" in dream" if i.in_sleep else ""}, in {i.current_biome.name}!",
                 file=OUTPUT_FILE)
                 print(i.name,f"died at age {i.get_age():.2f} years old.",file=OUTPUT_FILE)
                 print(f"deleting {self.lifes[time].name}",file=OUTPUT_FILE)
@@ -1263,56 +1271,75 @@ class environment:
 
 # example usage
 if __name__!="__main__":
-    print("need to run as main lol")
+    print("need to run as main lol",file=sys.stderr)
     sys.exit(0)
-personality: dict[str,personalities]={
-    "positivity":personalities("positivity",0.7),
-    "negativity":personalities("negativity",0.3),
-    "attention_span":personalities("attention_span",0.5),
-    "memory_index":personalities("memory_index",1.0),
-    "memory_range":personalities("memory_range",10),
-    "calmness":personalities("calmness",0.4),
-    "curiosity":personalities("curiosity",0.6),
-    "patience":personalities("patience",0.4),
-    "hear_limit":personalities("hear_limit",50),
-    "shyness":personalities("shyness",.9),
-    "memory_width":personalities("memory_width",6),
-    "far_think":personalities("far_think",10)
-}
-adam_home: position=position(0,0,"adam's")
-WORLD: environment=environment(20,20,2/3,[],[])
-WORLD.init()
-adam=human("亞當",personality,adam_home)
-eve=human("夏娃",personality,position(5,5,"eve's"))
-nd: dict[str,list[str]]=NameDataset().get_top_names(4, # type: ignore
-    use_first_names=True,country_alpha2="GB")["GB"]
-humans: list[human]=[adam,eve,*(human(i,personality,adam_home) for i in nd["M"]+nd["F"])]
-WORLD.append_life(*humans)
-for i in humans:
-    # print(i.name,tuple(i.name for i in sort_chose(humans,i,len(humans))))
-    print(i.name,tuple(map(attrgetter("name"),sort_chose(humans,i,len(humans)))))
-FPS: int=6000
-interval: float=1/FPS
-# t: float=time.monotonic()
-start: float=time.time()
-while 1:
-    if not WORLD.lifes:
-        print(f"All lifes are dead in {WORLD.tick} ticks!",file=OUTPUT_FILE)
-        print(f"All lifes are dead in {format_duration(WORLD.tick)}!")
-        break
-    if WORLD.tick&16383==0 and WORLD.tick>0:
-        print("16384 tick passed!")
-        OUTPUT_FILE.close()
-        OUTPUT_FILE=open("output.txt","a+",encoding="utf-8") # type: ignore
-    WORLD.mainloop()
-    # time.sleep(interval-((time.monotonic()-t)%interval))
+if os.path.exists("state.stat"):
+    with open("state.stat","r",encoding="utf-8") as file:
+        if file.readlines():
+            print("quit due to another running process...",file=sys.stderr)
+            sys.exit()
+    with open("state.stat","w",encoding="utf-8") as file:
+        file.write("on") # state machine is on
 else:
-    print("???") # I don't know why I need this,
-    # but it keeps the bug away
-delta: float=time.time()-start
-OUTPUT_FILE.close()
-print("Closed!")
-print("Consumed",delta,"second.")
-print(f"{WORLD.tick/delta:.2f} FPS")
+    with open("state.stat","a+",encoding="utf-8") as file:
+        file.write("on")
+try:
+    personality: dict[str,personalities]={
+        "positivity":personalities("positivity",0.7),
+        "negativity":personalities("negativity",0.3),
+        "attention_span":personalities("attention_span",0.5),
+        "memory_index":personalities("memory_index",1.0),
+        "memory_range":personalities("memory_range",10),
+        "calmness":personalities("calmness",0.4),
+        "curiosity":personalities("curiosity",0.6),
+        "patience":personalities("patience",0.4),
+        "hear_limit":personalities("hear_limit",50),
+        "shyness":personalities("shyness",.9),
+        "memory_width":personalities("memory_width",6),
+        "far_think":personalities("far_think",10)
+    }
+    adam_home: position=position(0,0,"adam's")
+    WORLD: environment=environment(20,20,2/3,[],[])
+    WORLD.init()
+    adam=human("亞當",personality,adam_home)
+    eve=human("夏娃",personality,position(5,5,"eve's"))
+    nd: dict[str,list[str]]=NameDataset().get_top_names(4, # type: ignore
+        use_first_names=True,country_alpha2="GB")["GB"]
+    humans: list[human]=[adam,eve,*(human(i,personality,adam_home) for i in nd["M"]+nd["F"])]
+    WORLD.append_life(*humans)
+    for i in humans:
+        # print(i.name,tuple(i.name for i in sort_chose(humans,i,len(humans))))
+        print(i.name,tuple(map(attrgetter("name"),sort_chose(humans,i,len(humans)))),file=sys.stderr)
+        # an example for finding the nearest living
+    FPS: int=6000
+    interval: float=1/FPS
+    # t: float=time.monotonic()
+    start: float=time.time()
+    duration: float=time.time()
+    temp: float
+    while 1:
+        if not WORLD.lifes:
+            print(f"All lifes are dead in {WORLD.tick} ticks!",file=OUTPUT_FILE)
+            print(f"All lifes are dead in {format_duration(WORLD.tick)}!",file=sys.stderr)
+            break
+        if WORLD.tick&16383==0 and WORLD.tick>0:
+            print("16384 tick passed!",file=sys.stderr)
+            temp=time.time()
+            print(f"{16384/(temp-duration):.2f}FPS, consumed {(temp-duration):.2f} seconds")
+            duration=temp
+            OUTPUT_FILE.close()
+            OUTPUT_FILE=open("output.txt","a+",encoding="utf-8") # type: ignore
+        WORLD.mainloop()
+        # time.sleep(interval-((time.monotonic()-t)%interval))
+    else:
+        print("???") # I don't know why I need this,
+        # but it keeps the bug away
+    delta: float=time.time()-start
+    OUTPUT_FILE.close()
+    print("Closed!",file=sys.stderr)
+    print("Consumed",delta,"second.",file=sys.stderr)
+    print(f"{WORLD.tick/delta:.2f} FPS",file=sys.stderr)
+except KeyboardInterrupt:
+    print("Quit due to Keyboard Interrupt...",file=sys.stderr)
 with open("state.stat","w",encoding="utf-8") as file:
     file.write("") # clear to state quit

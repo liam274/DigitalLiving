@@ -6,6 +6,9 @@
 
 其實…這個項目也是在探索我們自己
 """
+# © 2025 Liam Lei
+# Licensed under CC BY-NC-ND 4.0
+# See LICENSE file for details
 import random
 import math
 import time

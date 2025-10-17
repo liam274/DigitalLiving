@@ -1,8 +1,9 @@
 *
+# 使用!來排除被忽略的，讓他們重新被注視。
 !.gitignore
 !README.md
 !main.py
 !expermintal.py
 !目標.txt
 !most_output.txt
-# 使用!來排除被忽略的，讓他們重新被注視。
+!LICENSE

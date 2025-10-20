@@ -49,11 +49,6 @@ PRINTABLE: str=string.ascii_lowercase+string.ascii_uppercase+string.digits+" "
 
 WEATHERS: tuple[str,...]=("sunny","cloudy","rainy","stormy","snowy","foggy")
 
-if os.path.exists("output.txt"):
-    with open("output.txt","w",encoding="utf-8") as file:
-        file.write("") # clear the file
-OUTPUT_FILE: TextIO=open("output.txt","a",encoding="utf-8")
-
 # funcs
 
 def split(l: list[Any],size: int)->list[list[Any]]:
@@ -342,7 +337,7 @@ class mind:
         self.personality: dict[str,personalities]=personality
         self.memory: memory=memory({},int(personality["memory_width"].value)) # type: ignore
         self.love: dict[str,event]={}
-        self.concepts: dict[str,dict[str,event]]={} # concepts
+        self.concepts: dict[str,dict[str,event]]={"food":{"food":POINTLESS_EVENT}} # concepts
         self.feeling: dict[str,emotion_stat]={i:emotion_stat(i,0) for i in FEELINGS}
     def feel(self,name: str)->dict[str,emotion_stat]:
         """Feel a certain event"""
@@ -396,8 +391,8 @@ class mind:
 class unconscious_mind:
     """Unconscious mind"""
     __slots__=("personality","history_feeling_tick",
-    "feeling","memory","thoughts","mind_")
-    def __init__(self,personal: dict[str,personalities],mind_: mind):
+    "feeling","memory","thoughts","mind_","name")
+    def __init__(self,name: str,personal: dict[str,personalities],mind_: mind):
         # Notice that the unconscious mind only have
         # the instincts of the beast
         self.personality: dict[str,personalities]=personal
@@ -408,6 +403,7 @@ class unconscious_mind:
         self.memory: memory=memory({},int(personality["memory_width"].value)) # type: ignore
         self.thoughts: queue[dict[str,event]]=queue(int(personality["memory_range"].value))
         self.mind_: mind=mind_
+        self.name: str=name
     def think(self,thought: tuple[str,event])->tuple[bool,bool,dict[str,float]]:
         """Think if this should be in memory"""
         if not thought:
@@ -517,6 +513,7 @@ class unconscious_mind:
         """affect the event in order to 飲水思源"""
         if time>self.personality["far_think"].value:
             # If think too long, then return
+            print(f"{self.name} woke up from thinking!",file=OUTPUT_FILE)
             return
         e.feeling=e.change_feeling(b*.4)
         for i in e.relate_event:
@@ -558,7 +555,7 @@ class life:
         self.hug2heat: weakref.WeakSet[life]=weakref.WeakSet([self])
         self.stomach: float=0
         self.stomach_max: float=100
-        self.unconscious: unconscious_mind=unconscious_mind(personality,self.mind_)
+        self.unconscious: unconscious_mind=unconscious_mind(name,personality,self.mind_)
         self.frequent: dict[str,tuple[float,dict[str,event]]]={}
         self.freq_met: dict["life",int]={}
         self.friends: weakref.WeakSet[life]=weakref.WeakSet()
@@ -780,7 +777,18 @@ class life:
         for i in WORLD.obj:
             if abs(self.position_.x-i.pos.x)>5 or abs(self.position_.y-i.pos.y)>5:
                 continue
-            if self.position_.square_distance(i.pos)<=25 and "food"==i.name:
+            if self.position_.square_distance(i.pos)<=25:
+                if i.name not in self.mind_.concepts.get("food",{}):
+                    if random.random()>.1*(1+self.personality["curiosity"].value)/(self.stomach-80):
+                        # don't wanna try
+                        return False
+                    print(f"{self.name} tried new food!",file=OUTPUT_FILE)
+                    self.unconscious_thinking(("try new food",
+                        event("try new food",WORLD.time(),self.position_,
+                              personality_transform(self.personality,{}),1
+                              ,self.change_feeling(.1),[(self.touch_food,[])]
+                        )
+                    ))
                 WORLD.obj.remove(i)
                 return True
         return False
@@ -1286,6 +1294,10 @@ if os.path.exists("state.stat"):
 else:
     with open("state.stat","a+",encoding="utf-8") as file:
         file.write("on")
+if os.path.exists("output.txt"):
+    with open("output.txt","w",encoding="utf-8") as file:
+        file.write("") # clear the file
+OUTPUT_FILE: TextIO=open("output.txt","a",encoding="utf-8")
 try:
     personality: dict[str,personalities]={
         "positivity":personalities("positivity",0.7),
@@ -1332,6 +1344,7 @@ try:
             duration=temp
             OUTPUT_FILE.close()
             OUTPUT_FILE=open("output.txt","a+",encoding="utf-8") # type: ignore
+            print("output file saved!")
         WORLD.mainloop()
         # time.sleep(interval-((time.monotonic()-t)%interval))
     else:

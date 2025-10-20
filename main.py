@@ -21,11 +21,11 @@ import os
 import sys
 import weakref
 from array import array
-import numpy as np
-from names_dataset import NameDataset # type: ignore
 import types
 import heapq
 from operator import attrgetter
+import numpy as np
+from names_dataset import NameDataset # type: ignore
 
 # constants
 POSITIVE_FEELINGS: tuple[str,...]=("happy","surprised","trusting","joyful",
@@ -96,7 +96,8 @@ def age2weight(age: float)->float:
     return 80/(1+math.exp((v-age)/s))
 def chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     """chose without repeat"""
-    return tuple(random.sample(tuple(filter(lambda i: i is not t, l)),count))# tuple(i for i in l if i is not t)
+    # tuple(i for i in l if i is not t)
+    return tuple(random.sample(tuple(filter(lambda i: i is not t, l)),count))
 def mixture(a: dict[str,dict[str,float]],b: dict[str,dict[str,float]])->dict[str,dict[str,float]]:
     """mixture together, used in gene"""
     result: dict[str,dict[str,float]]={}
@@ -112,7 +113,8 @@ def mixture(a: dict[str,dict[str,float]],b: dict[str,dict[str,float]])->dict[str
 def sort_chose(l: list[Any],t: Any,count: int=1)->tuple[Any,...]:
     """sort it and chose it"""
     # l=[i for i in l if i is not t]
-    return tuple(heapq.nsmallest(count,tuple(filter(lambda i: i is not t,l)),key=lambda a:a.position_.square_distance(t.position_)))
+    return tuple(heapq.nsmallest(count,tuple(filter(lambda i: i is not t,l)),
+        key=lambda a:a.position_.square_distance(t.position_)))
 def between(a: float,upper: float,lower: float):
     """check if is between"""
     return lower<a<upper
@@ -128,6 +130,7 @@ def format_duration(seconds: int)->str:
     return f"{days} days {hours:02}:{minutes:02}:{seconds:02}"
 def personality_transform(data: dict[str,"personalities"],
     how_it_goes:dict[str,float])->dict[str,tuple[float,"personalities"]]:
+    """transform personality"""
     return {key:(how_it_goes.get(key,.5*random.random()),per)for key,per in data.items()}
 # classes
 
@@ -505,7 +508,8 @@ class unconscious_mind:
                 list[tuple[Callable[...,Any],tuple[Any,...]]]]]=[],
                 related_event: set[event]=set()):
         """remember some permanently(almost!)"""
-        return self.memory.remember(name,time,venue,personality,feelings,float_index,what2do,related_event)
+        return self.memory.remember(name,time,venue,personality,
+            feelings,float_index,what2do,related_event)
     def remember_e(self,e: event):
         """remember some event permanently(almost!)"""
         return self.memory.remember_e(e)
@@ -563,6 +567,7 @@ class life:
         self.important_events: weakref.WeakKeyDictionary[str,set[event]]=weakref.WeakKeyDictionary()
         # of certain events. Omit teaching
     def get_age(self)->float:
+        """return as year"""
         return self.tick/31536000
     def __hash__(self)->int:
         return hash(self.name)
@@ -890,6 +895,7 @@ class life:
         elif self.body_temp<30:
             self.is_alive=False
     def get_dead_reason(self)->str:
+        """return dead reason in details"""
         r: set[str]={
             "heat" if self.body_temp>44 else "",
             "hypothermia" if self.body_temp<30 else "",
@@ -1152,7 +1158,6 @@ class weather:
     wind_direction: float
     def update(self):
         """update the weather"""
-        pass
 @dataclass(slots=True)
 class dobj:
     """define the data object, a data structure"""
@@ -1160,7 +1165,6 @@ class dobj:
     pos: position
     def update(self):
         """update the object, usually useless. Stated here as a default, could be covered"""
-        pass
 class environment:
     """define the environment"""
     __slots__=("width","height","size","biomes",
@@ -1253,7 +1257,8 @@ class environment:
             for t,n in enumerate(self.map):
                 for t2,m in enumerate(n):
                     for _ in range(max(m.water_required//10,1)): # type: ignore
-                        if random.random()<self.water_content/10**int(math.log10(self.water_content)):
+                        if random.random()<\
+                        self.water_content/10**int(math.log10(self.water_content)):
                             self.obj.append(dobj("food",
                                 position(t*BIOME_SIZE+random.uniform(0,BIOME_SIZE),
                                     t2*BIOME_SIZE+random.uniform(0,BIOME_SIZE),"food")
@@ -1271,7 +1276,8 @@ class environment:
             i.update()
             if i.is_dead():
                 print(f"[{WORLD.time()}]",i.name,
-                f"is dead due to ({i.get_dead_reason()}){" in dream" if i.in_sleep else ""}, in {i.current_biome.name}!",
+                f"is dead due to ({i.get_dead_reason()}){" in dream" if i.in_sleep else ""
+                }, in {i.current_biome.name}!",
                 file=OUTPUT_FILE)
                 print(i.name,f"died at age {i.get_age():.2f} years old.",file=OUTPUT_FILE)
                 print(f"deleting {self.lifes[time].name}",file=OUTPUT_FILE)
@@ -1324,7 +1330,8 @@ try:
     WORLD.append_life(*humans)
     for i in humans:
         # print(i.name,tuple(i.name for i in sort_chose(humans,i,len(humans))))
-        print(i.name,tuple(map(attrgetter("name"),sort_chose(humans,i,len(humans)))),file=sys.stderr)
+        print(i.name,tuple(map(attrgetter("name"),
+            sort_chose(humans,i,len(humans)))),file=sys.stderr)
         # an example for finding the nearest living
     FPS: int=6000
     interval: float=1/FPS
